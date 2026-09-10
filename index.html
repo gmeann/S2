@@ -59,26 +59,28 @@
   .level-pane{ position:absolute; inset:0; display:flex; flex-direction:column; }
   .level-pane[hidden]{ display:none !important; }
 
-  /* ---------- Level 1: dough ---------- */
+  /* ---------- Level 1: dough (songpyeon stages, SVG layers) ---------- */
   .dough{
-    width:150px;height:150px;border-radius:50%;
-    background:radial-gradient(circle at 35% 30%, #fffdf7, #f3e6c8 70%, #e5d3a4);
-    box-shadow:0 10px 24px rgba(0,0,0,0.35), inset 0 -6px 14px rgba(120,90,40,0.25);
-    display:flex;align-items:center;justify-content:center;
-    transition: clip-path .55s cubic-bezier(.34,1.56,.64,1), transform .35s cubic-bezier(.34,1.56,.64,1), background .3s;
+    width:170px;height:170px;
+    display:block;
+    transition: transform .35s cubic-bezier(.34,1.56,.64,1);
     cursor:pointer; position:relative; touch-action:manipulation;
-    clip-path: circle(50% at 50% 50%);
+    --filling-color:#8B3A3A;
   }
-  .dough.shaped{
-    clip-path: polygon(0% 0%, 100% 0%, 100% 55%, 50% 100%, 0% 55%);
-    border-radius: 50% 50% 8px 8px;
+  .dough .stage-svg{
+    position:absolute; inset:0; width:100%; height:100%;
+    opacity:0; transform:scale(.92);
+    transition: opacity .45s ease, transform .45s cubic-bezier(.34,1.56,.64,1);
+    filter: drop-shadow(0 8px 10px rgba(0,0,0,.35));
+  }
+  .dough[data-stage="ball"] .stage-ball,
+  .dough[data-stage="filled"] .stage-filled,
+  .dough[data-stage="shaped"] .stage-shaped,
+  .dough[data-stage="steamed"] .stage-steamed{
+    opacity:1; transform:scale(1);
   }
   .dough.tap-bump{ animation: bump .28s ease; }
   @keyframes bump{ 0%{transform:scale(1)} 45%{transform:scale(1.18)} 100%{transform:scale(1)} }
-  .dough .filling-dot{
-    position:absolute; width:14px;height:14px;border-radius:50%;
-    box-shadow:0 1px 3px rgba(0,0,0,.3);
-  }
   .ingredient-chip{
     touch-action:none; user-select:none; cursor:grab;
   }
@@ -175,7 +177,53 @@
 
       <div class="flex-1 grid sm:grid-cols-[1fr_auto] gap-4 items-center">
         <div class="relative flex items-center justify-center h-full" id="l1Stage">
-          <div class="dough" id="dough" tabindex="0" role="button" aria-label="반죽 두드리기"></div>
+          <div class="dough" id="dough" data-stage="ball" tabindex="0" role="button" aria-label="반죽 두드리기">
+            <svg class="stage-svg stage-ball" viewBox="0 0 170 170" aria-hidden="true">
+              <defs><radialGradient id="g-ball" cx="35%" cy="28%" r="75%">
+                <stop offset="0%" stop-color="#fffdf8"/><stop offset="70%" stop-color="#f2e2b8"/><stop offset="100%" stop-color="#dcc48f"/>
+              </radialGradient></defs>
+              <ellipse cx="85" cy="145" rx="48" ry="9" fill="rgba(0,0,0,.18)"/>
+              <circle cx="85" cy="85" r="58" fill="url(#g-ball)"/>
+              <ellipse cx="65" cy="62" rx="20" ry="13" fill="rgba(255,255,255,.55)"/>
+            </svg>
+            <svg class="stage-svg stage-filled" viewBox="0 0 170 170" aria-hidden="true">
+              <defs><radialGradient id="g-disc" cx="35%" cy="22%" r="80%">
+                <stop offset="0%" stop-color="#fffdf8"/><stop offset="70%" stop-color="#f2e2b8"/><stop offset="100%" stop-color="#dcc48f"/>
+              </radialGradient></defs>
+              <ellipse cx="85" cy="148" rx="55" ry="8" fill="rgba(0,0,0,.18)"/>
+              <ellipse cx="85" cy="92" rx="68" ry="46" fill="url(#g-disc)"/>
+              <ellipse cx="85" cy="88" rx="38" ry="24" fill="rgba(110,84,40,.22)"/>
+              <g class="filling-blob" style="fill:var(--filling-color)">
+                <ellipse cx="70" cy="86" rx="8" ry="5.5"/>
+                <ellipse cx="86" cy="93" rx="8" ry="5.5"/>
+                <ellipse cx="102" cy="83" rx="8" ry="5.5"/>
+                <ellipse cx="78" cy="74" rx="7" ry="4.5"/>
+                <ellipse cx="96" cy="97" rx="7" ry="4.5"/>
+              </g>
+            </svg>
+            <svg class="stage-svg stage-shaped" viewBox="0 0 170 170" aria-hidden="true">
+              <defs><linearGradient id="g-cres" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#fffdf8"/><stop offset="60%" stop-color="#f3e4bd"/><stop offset="100%" stop-color="#e0c896"/>
+              </linearGradient></defs>
+              <ellipse cx="85" cy="140" rx="58" ry="8" fill="rgba(0,0,0,.18)"/>
+              <path d="M25,108 L24.3,102.5 L22.7,96.7 L22,90.7 L23.1,85.1 L25.9,80.2 L29,75.9 L31.2,71.3 L32.2,65.8 L32.8,59.8 L34.4,54.3 L37.3,50.2 L41.3,47.5 L45.2,45.2 L48.4,42.1 L51.1,37.7 L53.7,33 L57,29.3 L60.9,27.6 L65.2,27.5 L69.4,27.5 L73.3,26.4 L77,24 L80.9,21.6 L85,20.5 L89.1,21.6 L93,24 L96.7,26.4 L100.6,27.5 L104.8,27.5 L109.1,27.6 L113,29.3 L116.3,33 L118.9,37.7 L121.6,42.1 L124.8,45.2 L128.7,47.5 L132.7,50.2 L135.6,54.3 L137.2,59.8 L137.8,65.8 L138.8,71.3 L141,75.9 L144.1,80.2 L146.9,85.1 L148,90.7 L147.3,96.7 L145.7,102.5 L145,108 Q145,125 125,127 L45,127 Q25,125 25,108 Z"
+                fill="url(#g-cres)" stroke="rgba(110,84,40,.4)" stroke-width="2" stroke-linejoin="round"/>
+            </svg>
+            <svg class="stage-svg stage-steamed" viewBox="0 0 170 170" aria-hidden="true">
+              <defs><linearGradient id="g-cres2" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#fffef9"/><stop offset="55%" stop-color="#f6e9c8"/><stop offset="100%" stop-color="#e4cd9d"/>
+              </linearGradient></defs>
+              <g stroke="#4a7a2e" stroke-width="2.5" stroke-linecap="round" opacity=".8" fill="none">
+                <path d="M15,138 Q40,128 60,138"/>
+                <path d="M105,140 Q130,128 155,140"/>
+                <path d="M50,145 Q85,136 120,145"/>
+              </g>
+              <ellipse cx="85" cy="140" rx="58" ry="8" fill="rgba(0,0,0,.15)"/>
+              <path d="M25,108 L24.3,102.5 L22.7,96.7 L22,90.7 L23.1,85.1 L25.9,80.2 L29,75.9 L31.2,71.3 L32.2,65.8 L32.8,59.8 L34.4,54.3 L37.3,50.2 L41.3,47.5 L45.2,45.2 L48.4,42.1 L51.1,37.7 L53.7,33 L57,29.3 L60.9,27.6 L65.2,27.5 L69.4,27.5 L73.3,26.4 L77,24 L80.9,21.6 L85,20.5 L89.1,21.6 L93,24 L96.7,26.4 L100.6,27.5 L104.8,27.5 L109.1,27.6 L113,29.3 L116.3,33 L118.9,37.7 L121.6,42.1 L124.8,45.2 L128.7,47.5 L132.7,50.2 L135.6,54.3 L137.2,59.8 L137.8,65.8 L138.8,71.3 L141,75.9 L144.1,80.2 L146.9,85.1 L148,90.7 L147.3,96.7 L145.7,102.5 L145,108 Q145,125 125,127 L45,127 Q25,125 25,108 Z"
+                fill="url(#g-cres2)" stroke="rgba(110,84,40,.35)" stroke-width="2" stroke-linejoin="round"/>
+              <ellipse cx="65" cy="55" rx="22" ry="10" fill="rgba(255,255,255,.35)"/>
+            </svg>
+          </div>
           <div id="l1Rabbit" class="absolute text-4xl select-none" style="right:8%; bottom:6%; display:none; cursor:grab;" title="달토끼를 흔들어보세요">🐇</div>
         </div>
         <div class="flex sm:flex-col gap-3 justify-center" id="ingredientRow">
@@ -438,13 +486,9 @@ document.querySelectorAll(".ingredient-chip").forEach(chip=>{
 
 function setFilling(color, name){
   l1.filling = name;
-  dough.querySelectorAll(".filling-dot").forEach(d=>d.remove());
-  const dot = document.createElement("div");
-  dot.className = "filling-dot";
-  dot.style.background = color;
-  dot.style.left = "44%"; dot.style.top = "44%";
-  dough.appendChild(dot);
-  l1Status.textContent = name+" 반죽 완성! 이제 반죽을 세 번 톡톡 두드려보세요.";
+  dough.style.setProperty("--filling-color", color);
+  dough.dataset.stage = "filled";
+  l1Status.textContent = name+" 넣고 반죽을 눌러 담았어요! 이제 세 번 톡톡 두드려 접어보세요.";
   sfx.tap();
 }
 
@@ -456,8 +500,8 @@ dough.addEventListener("click", ()=>{
   l1Status.textContent = `톡톡! (${l1.taps}/3)`;
   if(l1.taps>=3){
     l1.shaped = true;
-    dough.classList.add("shaped");
-    l1Status.textContent = "예쁜 반달 모양이 됐어요!";
+    dough.dataset.stage = "shaped";
+    l1Status.textContent = "가장자리를 꼭꼭 눌러 붙였어요 — 예쁜 반달 모양이 됐어요!";
     l1SteamBtn.disabled = false;
   }
 });
@@ -476,6 +520,7 @@ l1SteamBtn.addEventListener("click", ()=>{
     dough.appendChild(puff);
   }
   setTimeout(()=>{
+    dough.dataset.stage = "steamed";
     l1Status.textContent = "완성! 달토끼를 흔들어 축하해보세요 🎉";
     l1Rabbit.style.display = "block";
   }, 1200);
