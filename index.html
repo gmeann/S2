@@ -56,6 +56,11 @@
   @media (max-width:640px){
     .viewport{ aspect-ratio:auto; min-height:78vh; }
   }
+  #viewport.viewport--flexible{
+    aspect-ratio:auto;
+    height:auto;
+    min-height:620px;
+  }
   .level-pane{ position:absolute; inset:0; display:flex; flex-direction:column; }
   .level-pane[hidden]{ display:none !important; }
 
@@ -136,7 +141,6 @@
   }
   .flip-back{ transform:rotateY(180deg); }
   .card-elegant{
-    position:relative;
     color:#3a2c1d;
     font-family: Georgia, 'Nanum Myeongjo', Batang, serif;
     background:
@@ -202,12 +206,13 @@
     <button class="tab-btn btn btn-ghost" data-level="l3" role="tab"><i data-lucide="layers" class="w-4 h-4"></i>3. 팩트체크</button>
     <button class="tab-btn btn btn-ghost" data-level="bonus" role="tab"><i data-lucide="keyboard" class="w-4 h-4"></i>보너스. 타자 산성</button>
     <button class="tab-btn btn btn-ghost" data-level="end" role="tab"><i data-lucide="home" class="w-4 h-4"></i>우리 집 추석</button>
+    <button class="tab-btn btn btn-ghost" data-level="result" role="tab"><i data-lucide="image" class="w-4 h-4"></i>결과 카드</button>
   </nav>
 
   <div class="viewport glass rounded-3xl relative overflow-hidden shadow-2xl" id="viewport">
 
     <!-- ================= LEVEL 1 ================= -->
-    <section class="level-pane p-4 sm:p-6" data-pane="l1" hidden>
+    <section class="level-pane p-4 sm:p-6 overflow-y-auto" data-pane="l1" hidden>
       <div class="flex items-center justify-between mb-2">
         <h2 class="font-bold text-lg flex items-center gap-2"><i data-lucide="cookie" class="w-5 h-5" style="color:var(--moon)"></i>달토끼의 쫀득 송편 공방</h2>
         <button class="btn btn-ghost text-xs" id="l1FactBtn"><i data-lucide="lightbulb" class="w-4 h-4"></i>왜 반달 모양일까?</button>
@@ -461,6 +466,30 @@
       <ul class="space-y-1 text-sm" id="sourceList"></ul>
     </section>
 
+    <!-- ================= RESULT CARD ================= -->
+    <section class="level-pane p-5 sm:p-7 overflow-y-auto" data-pane="result" hidden>
+      <h2 class="font-bold text-xl mb-1 flex items-center gap-2"><i data-lucide="image" class="w-5 h-5" style="color:var(--moon)"></i>결과 카드</h2>
+      <p class="text-sm text-white/70 mb-4">송편 공방·들판 수확·팩트체크를 모두 마치면 나만의 추석 결과 카드를 만들 수 있어요.</p>
+
+      <div id="resultChecklist" class="space-y-2 mb-4">
+        <p class="text-sm flex items-center gap-2"><span id="resultCheckL1">⬜</span> 송편 공방</p>
+        <p class="text-sm flex items-center gap-2"><span id="resultCheckL2">⬜</span> 들판 수확</p>
+        <p class="text-sm flex items-center gap-2"><span id="resultCheckL3">⬜</span> 팩트체크</p>
+      </div>
+
+      <div id="resultReady" hidden>
+        <button class="btn btn-primary mb-4" id="resultMakeBtn"><i data-lucide="sparkles" class="w-4 h-4"></i>카드 만들기</button>
+        <div class="rounded-2xl overflow-hidden mb-4 max-w-xs" id="resultCanvasWrap" hidden>
+          <canvas id="resultCanvas" class="w-full block"></canvas>
+        </div>
+        <div class="flex gap-3 flex-wrap" id="resultButtons" hidden>
+          <button class="btn btn-jade" id="resultSaveBtn"><i data-lucide="download" class="w-4 h-4"></i>이미지로 저장</button>
+          <button class="btn btn-ghost" id="resultCopyBtn"><i data-lucide="copy" class="w-4 h-4"></i>이미지 복사</button>
+        </div>
+        <p class="text-xs text-white/50 mt-2" id="resultCopyNote" hidden></p>
+      </div>
+    </section>
+
   </div>
 
   <footer class="text-center text-[11px] text-white/40 mt-4">추석 계기교육용 웹게임 · 오답을 걱정하지 말고 마음껏 눌러보세요</footer>
@@ -574,9 +603,11 @@ function showLevel(id){
   closeActivePopup();
   Object.entries(panes).forEach(([key,el])=>{ el.hidden = key!==id; });
   tabBtns.forEach(b=>b.dataset.active = (b.dataset.level===id) ? "true" : "false");
+  document.getElementById("viewport").classList.toggle("viewport--flexible", id==="end" || id==="result");
   if(id==="l1" && !l1IntroShown){ l1IntroShown = true; showL1Intro(); }
   if(id==="l3" && !l3IntroShown){ l3IntroShown = true; showL3Intro(); }
   if(id==="end") renderEnding();
+  if(id==="result") renderResultCard();
 }
 tabBtns.forEach(b=> b.addEventListener("click", ()=> showLevel(b.dataset.level)) );
 
@@ -1428,6 +1459,163 @@ function renderEnding(){
     list.appendChild(li);
   });
 }
+
+/* ================= RESULT CARD ================= */
+function renderResultCard(){
+  const l1Done = l1AllDone, l2Done = l2EverCompleted, l3Done = l3Seen.size >= FACT_CARDS.length;
+  document.getElementById("resultCheckL1").textContent = l1Done ? "✅" : "⬜";
+  document.getElementById("resultCheckL2").textContent = l2Done ? "✅" : "⬜";
+  document.getElementById("resultCheckL3").textContent = l3Done ? "✅" : "⬜";
+  document.getElementById("resultReady").hidden = !(l1Done && l2Done && l3Done);
+}
+function roundRect(ctx, x, y, w, h, r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
+function wrapCanvasText(ctx, text, x, y, maxWidth, lineHeight, maxLines){
+  const words = text.split(/\s+/).filter(Boolean);
+  const lines = [];
+  let line = "";
+  for(const w of words){
+    const test = line ? line+" "+w : w;
+    if(ctx.measureText(test).width > maxWidth && line){
+      lines.push(line);
+      line = w;
+      if(lines.length >= maxLines) break;
+    } else {
+      line = test;
+    }
+  }
+  if(lines.length < maxLines && line) lines.push(line);
+  const overflowed = lines.length >= maxLines && words.join(" ").length > lines.join(" ").length;
+  lines.slice(0,maxLines).forEach((l,i)=>{
+    const out = (i===maxLines-1 && overflowed) ? l.slice(0, Math.max(0,l.length-1))+"…" : l;
+    ctx.fillText(out, x, y+i*lineHeight);
+  });
+}
+function drawResultCard(canvas){
+  const W = 720, H = 960;
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext("2d");
+
+  const bg = ctx.createRadialGradient(W*0.3,H*0.15,10, W*0.5,H*0.5,900);
+  bg.addColorStop(0,"#fffaf0"); bg.addColorStop(0.55,"#f6ecd6"); bg.addColorStop(1,"#ecdcb8");
+  ctx.fillStyle = bg; ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle = "#d9c69c"; ctx.lineWidth = 3;
+  ctx.strokeRect(14,14,W-28,H-28);
+
+  const moonGrad = ctx.createRadialGradient(W/2,70,4, W/2,70,50);
+  moonGrad.addColorStop(0,"rgba(251,192,45,.9)"); moonGrad.addColorStop(1,"rgba(251,192,45,0)");
+  ctx.fillStyle = moonGrad; ctx.beginPath(); ctx.arc(W/2,70,50,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = "#f2b705"; ctx.beginPath(); ctx.arc(W/2,70,26,0,Math.PI*2); ctx.fill();
+
+  ctx.textAlign = "center";
+  ctx.fillStyle = "#3a2c1d";
+  ctx.font = "bold 34px Georgia, serif";
+  ctx.fillText("한가위 이야기 아케이드", W/2, 150);
+  ctx.font = "20px Georgia, serif";
+  ctx.fillText("나의 추석 결과 카드", W/2, 182);
+
+  ctx.font = "16px Georgia, serif";
+  ctx.fillText("총점", W/2, 230);
+  ctx.font = "bold 72px Georgia, serif";
+  ctx.fillText(String(totalScoreVal.textContent), W/2, 300);
+
+  ctx.strokeStyle = "#d9c69c"; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(80,330); ctx.lineTo(W-80,330); ctx.stroke();
+
+  ctx.textAlign = "left";
+  const rows = [
+    { icon:"🐇", label:"송편 공방", value: l1.completed.length+"/4 완성", dots: l1.completed.map(k=>L1_PLATE_COLORS[k]) },
+    { icon:"🌾", label:"들판 수확", value: "이번 판 "+l2.score+"점" },
+    { icon:"📜", label:"팩트체크", value: l3Seen.size+"/"+FACT_CARDS.length+" 확인" },
+  ];
+  if(bonus.score > 0) rows.push({ icon:"⌨️", label:"타자 산성", value: bonus.score+"점" });
+
+  let y = 380;
+  rows.forEach(row=>{
+    ctx.font = "28px sans-serif";
+    ctx.fillStyle = "#3a2c1d";
+    ctx.fillText(row.icon, 90, y);
+    ctx.font = "bold 22px Georgia, serif";
+    ctx.fillText(row.label, 140, y-4);
+    ctx.font = "18px Georgia, serif";
+    ctx.fillStyle = "#6b5738";
+    ctx.fillText(row.value, 140, y+22);
+    if(row.dots){
+      row.dots.forEach((c,i)=>{
+        ctx.fillStyle = c;
+        ctx.beginPath(); ctx.arc(420+i*26, y+8, 9, 0, Math.PI*2); ctx.fill();
+      });
+    }
+    y += 78;
+  });
+
+  y += 20;
+  const boxTop = y, boxHeight = 220;
+  ctx.fillStyle = "rgba(255,255,255,.5)";
+  roundRect(ctx, 70, boxTop, W-140, boxHeight, 18); ctx.fill();
+  ctx.strokeStyle = "#d9c69c"; ctx.lineWidth = 1;
+  roundRect(ctx, 70, boxTop, W-140, boxHeight, 18); ctx.stroke();
+
+  ctx.fillStyle = "#3a2c1d";
+  ctx.font = "bold 18px Georgia, serif";
+  ctx.fillText("우리 집 추석", 96, boxTop+38);
+
+  ctx.font = "17px Georgia, serif";
+  const reflection = (document.getElementById("endText").value || "").trim();
+  wrapCanvasText(ctx, reflection || "아직 이야기를 남기지 않았어요.", 96, boxTop+72, W-192, 26, 5);
+
+  ctx.textAlign = "center";
+  ctx.font = "14px Georgia, serif";
+  ctx.fillStyle = "#8a7550";
+  ctx.fillText("#추석 #한가위이야기아케이드", W/2, H-40);
+}
+
+document.getElementById("resultMakeBtn").addEventListener("click", ()=>{
+  const canvas = document.getElementById("resultCanvas");
+  drawResultCard(canvas);
+  document.getElementById("resultCanvasWrap").hidden = false;
+  document.getElementById("resultButtons").hidden = false;
+});
+document.getElementById("resultSaveBtn").addEventListener("click", ()=>{
+  const canvas = document.getElementById("resultCanvas");
+  canvas.toBlob(blob=>{
+    if(!blob) return;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "한가위_결과카드.png";
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  });
+});
+const resultCopyBtn = document.getElementById("resultCopyBtn");
+const resultCopyNote = document.getElementById("resultCopyNote");
+const canCopyImage = !!(navigator.clipboard && window.ClipboardItem);
+if(!canCopyImage){
+  resultCopyBtn.disabled = true;
+  resultCopyNote.hidden = false;
+  resultCopyNote.textContent = "이 브라우저에서는 이미지 복사가 지원되지 않아요. 저장 버튼을 이용해주세요.";
+}
+resultCopyBtn.addEventListener("click", ()=>{
+  if(!canCopyImage) return;
+  const canvas = document.getElementById("resultCanvas");
+  canvas.toBlob(async blob=>{
+    if(!blob) return;
+    resultCopyNote.hidden = false;
+    try{
+      await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+      resultCopyNote.textContent = "이미지가 복사됐어요! 원하는 곳에 붙여넣기 해보세요.";
+    }catch(e){
+      resultCopyNote.textContent = "복사에 실패했어요. 저장 버튼을 이용해주세요.";
+    }
+  });
+});
 
 function showGameIntro(){
   closeActivePopup();
