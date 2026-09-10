@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>한가위 이야기 아케이드</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lucide-static/0.460.0/umd/lucide.min.js"></script>
+<style>
+  :root{
+    --jade:#2E7D32;
+    --jade-light:#4CAF50;
+    --moon:#FBC02D;
+    --moon-light:#FFE082;
+    --night:#1A1E36;
+    --night-2:#252A4A;
+    --paper:#FFF8E7;
+  }
+  *{ -webkit-tap-highlight-color: transparent; }
+  html,body{ margin:0; background:var(--night); }
+  body{
+    font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+    color:#EAE6FF;
+    background:
+      radial-gradient(ellipse at 20% -10%, rgba(251,192,45,0.12), transparent 55%),
+      radial-gradient(ellipse at 100% 0%, rgba(46,125,50,0.18), transparent 45%),
+      var(--night);
+    min-height:100vh;
+  }
+  .glass{
+    background:rgba(255,255,255,0.06);
+    border:1px solid rgba(255,255,255,0.14);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+  .glass-card{
+    background:rgba(255,255,255,0.9);
+    color:#20241f;
+    border:1px solid rgba(255,255,255,0.6);
+    backdrop-filter: blur(10px);
+  }
+  .tab-btn{
+    transition:all .18s ease;
+    border:1px solid rgba(255,255,255,0.12);
+  }
+  .tab-btn[data-active="true"]{
+    background:linear-gradient(135deg,var(--moon),#F9A825);
+    color:#20241f;
+    border-color:transparent;
+    box-shadow:0 4px 16px rgba(251,192,45,0.35);
+  }
+  .viewport{
+    aspect-ratio:16/9;
+    min-height:420px;
+  }
+  @media (max-width:640px){
+    .viewport{ aspect-ratio:auto; min-height:78vh; }
+  }
+  .level-pane{ position:absolute; inset:0; display:flex; flex-direction:column; }
+  .level-pane[hidden]{ display:none !important; }
+
+  /* ---------- Level 1: dough ---------- */
+  .dough{
+    width:150px;height:150px;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #fffdf7, #f3e6c8 70%, #e5d3a4);
+    box-shadow:0 10px 24px rgba(0,0,0,0.35), inset 0 -6px 14px rgba(120,90,40,0.25);
+    display:flex;align-items:center;justify-content:center;
+    transition: clip-path .55s cubic-bezier(.34,1.56,.64,1), transform .35s cubic-bezier(.34,1.56,.64,1), background .3s;
+    cursor:pointer; position:relative; touch-action:manipulation;
+    clip-path: circle(50% at 50% 50%);
+  }
+  .dough.shaped{
+    clip-path: polygon(0% 0%, 100% 0%, 100% 55%, 50% 100%, 0% 55%);
+    border-radius: 50% 50% 8px 8px;
+  }
+  .dough.tap-bump{ animation: bump .28s ease; }
+  @keyframes bump{ 0%{transform:scale(1)} 45%{transform:scale(1.18)} 100%{transform:scale(1)} }
+  .dough .filling-dot{
+    position:absolute; width:14px;height:14px;border-radius:50%;
+    box-shadow:0 1px 3px rgba(0,0,0,.3);
+  }
+  .ingredient-chip{
+    touch-action:none; user-select:none; cursor:grab;
+  }
+  .ingredient-chip:active{ cursor:grabbing; }
+  .drag-ghost{
+    position:fixed; pointer-events:none; z-index:999; opacity:.9;
+    transform:translate(-50%,-50%) scale(1.1);
+  }
+  .steam-puff{
+    position:absolute; bottom:60%; left:50%; width:10px;height:10px;border-radius:50%;
+    background:rgba(255,255,255,0.85); opacity:0;
+    animation: steamRise 1.4s ease-out forwards;
+  }
+  @keyframes steamRise{
+    0%{ opacity:0; transform:translate(-50%,0) scale(.4); }
+    15%{ opacity:.85; }
+    100%{ opacity:0; transform:translate(-50%,-70px) scale(1.6); }
+  }
+  .confetti-piece{
+    position:absolute; top:-10px; width:8px;height:14px; opacity:.95;
+    animation: confettiFall linear forwards;
+  }
+  @keyframes confettiFall{
+    to{ transform:translateY(320px) rotate(540deg); opacity:0; }
+  }
+
+  /* ---------- Level 3: flip card ---------- */
+  .flip-scene{ perspective:1400px; }
+  .flip-card{
+    position:relative; width:100%; height:100%;
+    transform-style:preserve-3d; transition:transform .6s cubic-bezier(.4,.2,.2,1);
+  }
+  .flip-card.flipped{ transform:rotateY(180deg); }
+  .flip-face{
+    position:absolute; inset:0; backface-visibility:hidden;
+    border-radius:1.25rem; padding:1.5rem; display:flex; flex-direction:column;
+  }
+  .flip-back{ transform:rotateY(180deg); }
+
+  /* ---------- Bonus: typing arcade ---------- */
+  .word-chip{
+    position:absolute; padding:.35rem .9rem; border-radius:999px; font-weight:700;
+    white-space:nowrap; box-shadow:0 4px 10px rgba(0,0,0,.25); font-size:0.95rem;
+    transform:translateX(-50%);
+  }
+  .word-chip.good{ background:linear-gradient(135deg,#FFE082,#FBC02D); color:#3a2c00; border:2px solid #fff3c4; }
+  .word-chip.trap{ background:linear-gradient(135deg,#FF7043,#D84315); color:#fff; border:2px solid #ffab91; animation: aggro 0.6s infinite alternate; }
+  @keyframes aggro{ from{ filter:brightness(1);} to{ filter:brightness(1.25);} }
+  .heart-lost{ animation: heartPop .4s ease; }
+  @keyframes heartPop{ 0%{transform:scale(1.6); color:#ff5252;} 100%{transform:scale(1);} }
+
+  ::-webkit-scrollbar{ width:8px; }
+  ::-webkit-scrollbar-thumb{ background:rgba(255,255,255,0.2); border-radius:8px; }
+
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:.4rem;
+    min-height:44px; padding:.55rem 1.1rem; border-radius:.9rem; font-weight:700;
+    transition:transform .12s ease, box-shadow .12s ease; cursor:pointer; border:none;
+  }
+  .btn:active{ transform:scale(.96); }
+  .btn-primary{ background:linear-gradient(135deg,var(--moon),#F9A825); color:#20241f; }
+  .btn-ghost{ background:rgba(255,255,255,0.1); color:#EAE6FF; border:1px solid rgba(255,255,255,0.25); }
+  .btn-jade{ background:linear-gradient(135deg,var(--jade-light),var(--jade)); color:#fff; }
+</style>
+</head>
+<body>
+<div class="max-w-4xl mx-auto px-4 py-6">
+
+  <header class="mb-4">
+    <div class="flex items-center gap-3 mb-1">
+      <i data-lucide="moon-star" class="w-7 h-7" style="color:var(--moon)"></i>
+      <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight">한가위 이야기 아케이드</h1>
+    </div>
+    <p class="text-sm text-white/60">놀면서 파헤치는 추석의 진짜 이야기</p>
+  </header>
+
+  <nav class="flex flex-wrap gap-2 mb-4" id="tabNav" role="tablist" aria-label="레벨 선택">
+    <button class="tab-btn btn btn-ghost" data-level="l1" role="tab"><i data-lucide="cookie" class="w-4 h-4"></i>1. 송편 공방</button>
+    <button class="tab-btn btn btn-ghost" data-level="l2" role="tab"><i data-lucide="wheat" class="w-4 h-4"></i>2. 들판 수확</button>
+    <button class="tab-btn btn btn-ghost" data-level="l3" role="tab"><i data-lucide="layers" class="w-4 h-4"></i>3. 팩트체크</button>
+    <button class="tab-btn btn btn-ghost" data-level="bonus" role="tab"><i data-lucide="keyboard" class="w-4 h-4"></i>보너스. 타자 산성</button>
+    <button class="tab-btn btn btn-ghost" data-level="end" role="tab"><i data-lucide="home" class="w-4 h-4"></i>우리 집 추석</button>
+  </nav>
+
+  <div class="viewport glass rounded-3xl relative overflow-hidden shadow-2xl" id="viewport">
+
+    <!-- ================= LEVEL 1 ================= -->
+    <section class="level-pane p-4 sm:p-6" data-pane="l1" hidden>
+      <div class="flex items-center justify-between mb-2">
+        <h2 class="font-bold text-lg flex items-center gap-2"><i data-lucide="cookie" class="w-5 h-5" style="color:var(--moon)"></i>달토끼의 쫀득 송편 공방</h2>
+        <button class="btn btn-ghost text-xs" id="l1FactBtn"><i data-lucide="lightbulb" class="w-4 h-4"></i>왜 반달 모양일까?</button>
+      </div>
+      <p class="text-xs text-white/60 mb-3" id="l1Hint">속재료를 반죽으로 옮기고, 반죽을 세 번 톡톡 두드려 빚어보세요.</p>
+
+      <div class="flex-1 grid sm:grid-cols-[1fr_auto] gap-4 items-center">
+        <div class="relative flex items-center justify-center h-full" id="l1Stage">
+          <div class="dough" id="dough" tabindex="0" role="button" aria-label="반죽 두드리기"></div>
+          <div id="l1Rabbit" class="absolute text-4xl select-none" style="right:8%; bottom:6%; display:none; cursor:grab;" title="달토끼를 흔들어보세요">🐇</div>
+        </div>
+        <div class="flex sm:flex-col gap-3 justify-center" id="ingredientRow">
+          <div class="ingredient-chip glass rounded-2xl p-2 flex flex-col items-center w-16" data-fill="#6FA33B" data-name="쑥">
+            <span class="text-2xl">🌿</span><span class="text-[11px] mt-1">쑥</span>
+          </div>
+          <div class="ingredient-chip glass rounded-2xl p-2 flex flex-col items-center w-16" data-fill="#F0A93A" data-name="단호박">
+            <span class="text-2xl">🎃</span><span class="text-[11px] mt-1">단호박</span>
+          </div>
+          <div class="ingredient-chip glass rounded-2xl p-2 flex flex-col items-center w-16" data-fill="#8B3A3A" data-name="팥">
+            <span class="text-2xl">🫘</span><span class="text-[11px] mt-1">팥</span>
+          </div>
+          <div class="ingredient-chip glass rounded-2xl p-2 flex flex-col items-center w-16" data-fill="#D9C08A" data-name="깨">
+            <span class="text-2xl">⚫</span><span class="text-[11px] mt-1">깨</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between mt-3">
+        <span class="text-xs text-white/50" id="l1Status">속재료를 먼저 골라주세요</span>
+        <button class="btn btn-jade" id="l1SteamBtn" disabled><i data-lucide="flame" class="w-4 h-4"></i>솔잎 깔고 찌기</button>
+      </div>
+    </section>
+
+    <!-- ================= LEVEL 2 ================= -->
+    <section class="level-pane" data-pane="l2" hidden>
+      <div class="flex items-center justify-between px-4 pt-4 pb-2">
+        <h2 class="font-bold text-lg flex items-center gap-2"><i data-lucide="wheat" class="w-5 h-5" style="color:var(--moon)"></i>한가위 들판 수확 탐험</h2>
+        <div class="flex items-center gap-3 text-sm">
+          <span class="glass rounded-full px-3 py-1 flex items-center gap-1"><i data-lucide="timer" class="w-4 h-4"></i><span id="l2Time">30</span>s</span>
+          <span class="glass rounded-full px-3 py-1 flex items-center gap-1"><i data-lucide="star" class="w-4 h-4" style="color:var(--moon)"></i><span id="l2Score">0</span></span>
+        </div>
+      </div>
+      <div class="relative flex-1 mx-4 mb-4 rounded-2xl overflow-hidden" id="l2Wrap">
+        <canvas id="l2Canvas" class="w-full h-full block"></canvas>
+        <button class="btn btn-primary absolute inset-0 m-auto w-max h-max" id="l2StartBtn"><i data-lucide="play" class="w-4 h-4"></i>수확 시작!</button>
+        <div class="absolute bottom-3 left-0 right-0 flex justify-between px-3 sm:hidden">
+          <button class="btn btn-ghost w-14 h-14 !rounded-full" id="l2Left" aria-label="왼쪽"><i data-lucide="chevron-left"></i></button>
+          <button class="btn btn-ghost w-14 h-14 !rounded-full" id="l2Right" aria-label="오른쪽"><i data-lucide="chevron-right"></i></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= LEVEL 3 ================= -->
+    <section class="level-pane p-4 sm:p-6" data-pane="l3" hidden>
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="font-bold text-lg flex items-center gap-2"><i data-lucide="layers" class="w-5 h-5" style="color:var(--moon)"></i>차례상 팩트체크 데이터랩</h2>
+        <span class="text-sm text-white/60" id="l3Counter">1/1</span>
+      </div>
+      <div class="flex-1 flip-scene">
+        <div class="flip-card" id="l3Card">
+          <div class="flip-face glass-card" id="l3Front">
+            <p class="text-xs uppercase tracking-wide text-black/50 mb-2">이 이야기, 오해일까 진실일까?</p>
+            <p class="text-lg font-bold flex-1" id="l3Claim">불러오는 중…</p>
+            <div class="flex gap-3 mt-4">
+              <button class="btn btn-ghost flex-1" style="background:#ffe0e0;color:#8a1f1f;border-color:#f3b9b9" data-verdict="오해"><i data-lucide="x" class="w-4 h-4"></i>❌ 오해</button>
+              <button class="btn btn-ghost flex-1" style="background:#e3f3e6;color:#1f5c2f;border-color:#b6e0be" data-verdict="사실"><i data-lucide="check" class="w-4 h-4"></i>⭕ 진실</button>
+            </div>
+          </div>
+          <div class="flip-face flip-back glass-card" id="l3Back">
+            <p class="text-sm font-bold mb-1" id="l3ResultTag"></p>
+            <p class="text-sm flex-1 leading-relaxed" id="l3Explain"></p>
+            <a href="#" target="_blank" rel="noopener" class="text-xs underline text-blue-700 mb-3" id="l3Source">출처 보기</a>
+            <button class="btn btn-jade" id="l3NextBtn">다음 카드<i data-lucide="arrow-right" class="w-4 h-4"></i></button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= BONUS ================= -->
+    <section class="level-pane p-4 sm:p-6" data-pane="bonus" hidden>
+      <div class="flex items-center justify-between mb-2">
+        <h2 class="font-bold text-lg flex items-center gap-2"><i data-lucide="keyboard" class="w-5 h-5" style="color:var(--moon)"></i>한가위 팩트 타자 산성</h2>
+        <div class="flex items-center gap-3 text-sm">
+          <span id="bonusHearts" class="flex gap-0.5"></span>
+          <span class="glass rounded-full px-3 py-1 flex items-center gap-1"><i data-lucide="star" class="w-4 h-4" style="color:var(--moon)"></i><span id="bonusScore">0</span></span>
+        </div>
+      </div>
+      <p class="text-xs text-white/60 mb-2">추석과 관련된 낱말만 입력해서 없애세요. 다른 명절 낱말은 <b>그냥 지나쳐 보내야</b> 해요!</p>
+      <div class="relative flex-1 rounded-2xl overflow-hidden glass" id="bonusField">
+        <button class="btn btn-primary absolute inset-0 m-auto w-max h-max z-10" id="bonusStartBtn"><i data-lucide="play" class="w-4 h-4"></i>산성 시작!</button>
+      </div>
+      <input id="bonusInput" type="text" autocomplete="off" placeholder="여기에 낱말을 입력하고 Enter"
+        class="mt-3 w-full rounded-xl px-4 py-3 text-black text-base" />
+    </section>
+
+    <!-- ================= ENDING ================= -->
+    <section class="level-pane p-5 sm:p-7 overflow-y-auto" data-pane="end" hidden>
+      <h2 class="font-bold text-xl mb-1 flex items-center gap-2"><i data-lucide="home" class="w-5 h-5" style="color:var(--moon)"></i>우리 집 추석</h2>
+      <p class="text-sm text-white/70 mb-4">추석에 하는 일은 집집마다 달라요. 여러분의 이야기를 자유롭게 적어보세요. (저장되지 않고 이 화면에만 표시돼요)</p>
+      <label class="block text-sm font-semibold mb-1">우리 집에서는 추석에 이런 일을 해요</label>
+      <textarea id="endText" rows="3" class="w-full rounded-xl px-3 py-2 text-black mb-4" placeholder="예: 가족과 모여서 송편을 빚어요 / 성묘를 다녀와요 / 평소처럼 지내요 등등 무엇이든 좋아요"></textarea>
+      <button class="btn btn-jade mb-6" id="endShowBtn"><i data-lucide="sparkles" class="w-4 h-4"></i>내 이야기 보기</button>
+      <div id="endReflection" class="glass-card rounded-2xl p-4 mb-6" hidden>
+        <p class="text-sm" id="endReflectionText"></p>
+      </div>
+      <h3 class="font-bold mb-2 flex items-center gap-2"><i data-lucide="book-open-check" class="w-4 h-4"></i>이 게임에서 다룬 이야기, 더 알아보기</h3>
+      <ul class="space-y-1 text-sm" id="sourceList"></ul>
+    </section>
+
+  </div>
+
+  <footer class="text-center text-[11px] text-white/40 mt-4">추석 계기교육용 웹게임 · 오답을 걱정하지 말고 마음껏 눌러보세요</footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* CDN icon library can fail to load on slow/filtered school networks — never let that break the game. */
+function safeIcons(){
+  try{ if(window.lucide) lucide.createIcons(); }catch(e){ /* icons unavailable, game still works */ }
+}
+
+/* ============ Fact data (source: 국립민속박물관/언론 보도 팩트 DB 기준) ============ */
+const L1_FACTS = [
+  { text:"송편을 반달 모양으로 예쁘게 빚으면 예쁜 아이를 낳는다는 이야기가 전해 내려와요.", url:"https://www.jjan.kr/article/20210916740554" },
+  { text:"솔잎을 켜켜이 깔고 쪄서 '송편'이라 불렀다는 이야기가 있어요. 솔잎 향이 배고 방부 효과도 있었대요.", url:"https://www.jjan.kr/article/20210916740554" },
+  { text:"지역마다 송편이 달라요 — 전주는 모싯잎, 강원도는 감자·도토리, 충청도는 호박을 넣어요.", url:"https://www.jjan.kr/articleAmp/20180913649669" },
+];
+
+const L2_FACTS = [
+  { text:"추석 음식은 그 해 처음 거둔 쌀(햅쌀)·잡곡(햇곡식)으로 만들어 조상께 먼저 올리는 게 전통이에요.", url:"https://m.seoul.co.kr/news/2010/10/03/20101003401002" },
+  { text:"추석은 설날·한식·단오와 함께 한국의 4대 명절 중 하나로 꼽혀요.", url:"https://m.seoul.co.kr/news/2010/10/03/20101003401002" },
+];
+
+const FACT_CARDS = [
+  { claim:"차례와 제사는 똑같은 것이다.", verdict:"오해",
+    explain:"차례는 명절에 조상을 기리는 의식이고, 제사(기제사)는 돌아가신 날(기일)에 지내는 의식이에요. 서로 다른 의식이랍니다.",
+    url:"https://sgsg.hankyung.com/article/2017092236821" },
+  { claim:"성묘는 조상의 산소를 찾아가 돌보고 인사드리는 일이다.", verdict:"사실",
+    explain:"맞아요. 성묘는 조상의 산소를 찾아 돌보고 인사드리는 것을 말해요.",
+    url:"https://sgsg.hankyung.com/article/2017092236821" },
+  { claim:"차례상 차리는 법에는 전국 어디서나 똑같은 정답이 있다.", verdict:"오해",
+    explain:"'가가례(家家禮)'라는 말이 있을 정도로 차례상 차리는 법은 집집·지역마다 달라요. 정해진 하나의 정답은 없어요.",
+    url:"https://kbmaeil.com/article/201109090013698" },
+  { claim:"'홍동백서', '조율이시'는 예로부터 내려온 확실한 예법 규칙이다.", verdict:"오해",
+    explain:"널리 알려져 있지만, 예법을 다룬 옛 문헌에 명확한 근거가 있다고 보기 어렵다는 지적이 여러 차례 나왔어요.",
+    url:"https://mobile.newsis.com/view/NISX20220908_0002007759" },
+  { claim:"성균관에서는 차례상에 반드시 전을 부쳐야 한다고 안내한다.", verdict:"오해",
+    explain:"오히려 반대예요! 2022년 성균관 의례정립위원회 표준안은 음식 9가지 정도면 충분하고, 전을 부치지 않아도 된다고 안내했어요.",
+    url:"https://www.newsis.com/view/NISX20220908_0002008425" },
+  { claim:"지방(紙榜)을 쓰기 어려우면 차례를 지낼 수 없다.", verdict:"오해",
+    explain:"성균관 표준안에는 지방 쓰기 어려우면 사진을 놓고 차례를 지내도 된다는 내용도 담겨 있어요.",
+    url:"https://mobile.newsis.com/view/NISX20220908_0002008425" },
+];
+
+const BONUS_NOTE_FACTS = [
+  { text:"'한가위'는 '한'(크다)+'가위'(가운데)가 합쳐져 '8월의 한가운데'라는 뜻이에요.", url:"https://www.dhnews.co.kr/news/view/179510669157082" },
+  { text:"신라 때는 한가위를 '가배(嘉俳)'라 불렀어요. 두 편으로 나눠 한 달간 길쌈 시합을 벌인 데서 유래했대요.", url:"https://www.imaeil.com/page/view/2020092118470856813" },
+  { text:"강강술래는 2009년 유네스코 인류무형문화유산에 공식 등재됐어요.", url:"https://www.sidae.com/article/2015120310328068262" },
+  { text:"'올벼쌀'은 그 해 일찍 여문 벼로 지은 쌀, '오려송편'은 그 올벼쌀로 빚은 송편이에요 — 모두 햇곡식을 조상께 먼저 올리던 전통과 이어져요.", url:"https://m.seoul.co.kr/news/2010/10/03/20101003401002" },
+];
+
+const BONUS_GOOD_WORDS = ["추석","한가위","보름달","송편","강강술래","성묘","차례","토끼","가배","올벼쌀","오려송편","가가례","솔잎"];
+const BONUS_TRAP_WORDS = ["설날","떡국","크리스마스","세뱃돈","산타클로스","부활절","빼빼로데이"];
+
+function hostname(url){ try{ return new URL(url).hostname.replace(/^www\./,""); }catch(e){ return url; } }
+
+function collectAllSources(){
+  const seen = new Map();
+  [...L1_FACTS, ...L2_FACTS, ...FACT_CARDS.map(c=>({text:c.claim,url:c.url})), ...BONUS_NOTE_FACTS]
+    .forEach(f=>{ if(!seen.has(f.url)) seen.set(f.url, f); });
+  return [...seen.values()];
+}
+
+/* ============ Audio (Web Audio API, no external files) ============ */
+let audioCtx = null;
+function ensureAudio(){ if(!audioCtx){ audioCtx = new (window.AudioContext||window.webkitAudioContext)(); } return audioCtx; }
+function tone(freq, dur, type, gain){
+  try{
+    const ctx = ensureAudio();
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = type||"sine";
+    osc.frequency.value = freq;
+    g.gain.value = gain!==undefined?gain:0.08;
+    osc.connect(g); g.connect(ctx.destination);
+    const now = ctx.currentTime;
+    g.gain.setValueAtTime(g.gain.value, now);
+    g.gain.exponentialRampToValueAtTime(0.001, now+dur);
+    osc.start(now); osc.stop(now+dur+0.02);
+  }catch(e){ /* audio unavailable, ignore */ }
+}
+const sfx = {
+  tap:()=>tone(420,0.08,"triangle",0.06),
+  correct:()=>{ tone(660,0.12,"sine",0.09); setTimeout(()=>tone(880,0.16,"sine",0.09),90); },
+  wrong:()=>tone(160,0.28,"sawtooth",0.08),
+  type:()=>tone(300,0.04,"square",0.03),
+};
+
+/* ============ Tab navigation ============ */
+const panes = {};
+document.querySelectorAll(".level-pane").forEach(p=>panes[p.dataset.pane]=p);
+const tabBtns = [...document.querySelectorAll("#tabNav .tab-btn")];
+
+function showLevel(id){
+  closeActivePopup();
+  Object.entries(panes).forEach(([key,el])=>{ el.hidden = key!==id; });
+  tabBtns.forEach(b=>b.dataset.active = (b.dataset.level===id) ? "true" : "false");
+  if(id==="l3") initLevel3();
+  if(id==="end") renderEnding();
+}
+tabBtns.forEach(b=> b.addEventListener("click", ()=> showLevel(b.dataset.level)) );
+
+/* ============ Fact popup (shared) ============ */
+let activePopup = null;
+function closeActivePopup(){
+  if(activePopup){ activePopup.remove(); activePopup = null; }
+}
+function showFactPopup(facts){
+  closeActivePopup();
+  const overlay = document.createElement("div");
+  overlay.className = "absolute inset-0 z-30 flex items-center justify-center p-4";
+  overlay.style.background = "rgba(10,12,30,0.55)";
+  const box = document.createElement("div");
+  box.className = "glass-card rounded-2xl p-5 max-w-sm w-full max-h-[80%] overflow-y-auto";
+  box.innerHTML = `<h3 class="font-bold mb-3 flex items-center gap-2">🌕 알고 있었나요?</h3>` +
+    facts.map(f=>`<div class="mb-3 text-sm leading-relaxed"><p>${f.text}</p><a href="${f.url}" target="_blank" rel="noopener" class="text-xs underline text-blue-700">출처: ${hostname(f.url)}</a></div>`).join("") +
+    `<button class="btn btn-jade w-full mt-1" data-close>확인</button>`;
+  overlay.appendChild(box);
+  document.getElementById("viewport").appendChild(overlay);
+  activePopup = overlay;
+  box.querySelector("[data-close]").addEventListener("click", closeActivePopup);
+  overlay.addEventListener("click", (e)=>{ if(e.target===overlay) closeActivePopup(); });
+}
+document.getElementById("l1FactBtn").addEventListener("click", ()=> showFactPopup(L1_FACTS.slice(0,2)) );
+
+/* ================= LEVEL 1: Songpyeon workshop ================= */
+const dough = document.getElementById("dough");
+const l1Status = document.getElementById("l1Status");
+const l1SteamBtn = document.getElementById("l1SteamBtn");
+const l1Rabbit = document.getElementById("l1Rabbit");
+let l1 = { filling:null, taps:0, shaped:false, steamed:false };
+
+document.querySelectorAll(".ingredient-chip").forEach(chip=>{
+  let dragEl = null;
+  chip.addEventListener("pointerdown", (e)=>{
+    if(l1.steamed) return;
+    chip.setPointerCapture(e.pointerId);
+    dragEl = chip.cloneNode(true);
+    dragEl.classList.add("drag-ghost");
+    dragEl.style.left = e.clientX+"px"; dragEl.style.top = e.clientY+"px";
+    document.body.appendChild(dragEl);
+  });
+  chip.addEventListener("pointermove", (e)=>{
+    if(!dragEl) return;
+    dragEl.style.left = e.clientX+"px"; dragEl.style.top = e.clientY+"px";
+  });
+  function drop(e){
+    if(!dragEl) return;
+    const rect = dough.getBoundingClientRect();
+    const inside = e.clientX>=rect.left && e.clientX<=rect.right && e.clientY>=rect.top && e.clientY<=rect.bottom;
+    if(inside){ setFilling(chip.dataset.fill, chip.dataset.name); }
+    dragEl.remove(); dragEl=null;
+  }
+  chip.addEventListener("pointerup", drop);
+  chip.addEventListener("pointercancel", ()=>{ if(dragEl){ dragEl.remove(); dragEl=null; } });
+});
+
+function setFilling(color, name){
+  l1.filling = name;
+  dough.querySelectorAll(".filling-dot").forEach(d=>d.remove());
+  const dot = document.createElement("div");
+  dot.className = "filling-dot";
+  dot.style.background = color;
+  dot.style.left = "44%"; dot.style.top = "44%";
+  dough.appendChild(dot);
+  l1Status.textContent = name+" 반죽 완성! 이제 반죽을 세 번 톡톡 두드려보세요.";
+  sfx.tap();
+}
+
+dough.addEventListener("click", ()=>{
+  if(!l1.filling || l1.shaped) return;
+  l1.taps++;
+  dough.classList.remove("tap-bump"); void dough.offsetWidth; dough.classList.add("tap-bump");
+  sfx.tap();
+  l1Status.textContent = `톡톡! (${l1.taps}/3)`;
+  if(l1.taps>=3){
+    l1.shaped = true;
+    dough.classList.add("shaped");
+    l1Status.textContent = "예쁜 반달 모양이 됐어요!";
+    l1SteamBtn.disabled = false;
+  }
+});
+dough.addEventListener("keydown", (e)=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); dough.click(); } });
+
+l1SteamBtn.addEventListener("click", ()=>{
+  if(l1.steamed) return;
+  l1.steamed = true;
+  l1SteamBtn.disabled = true;
+  const stage = document.getElementById("l1Stage");
+  for(let i=0;i<6;i++){
+    const puff = document.createElement("div");
+    puff.className = "steam-puff";
+    puff.style.animationDelay = (i*0.15)+"s";
+    puff.style.left = (48+Math.random()*8)+"%";
+    dough.appendChild(puff);
+  }
+  setTimeout(()=>{
+    l1Status.textContent = "완성! 달토끼를 흔들어 축하해보세요 🎉";
+    l1Rabbit.style.display = "block";
+  }, 1200);
+});
+
+let rabbitDrags = 0;
+l1Rabbit.addEventListener("pointerdown", ()=>{
+  rabbitDrags++;
+  fireConfetti(document.getElementById("l1Stage"));
+  sfx.correct();
+});
+function fireConfetti(container){
+  const colors = ["#FBC02D","#2E7D32","#FFEE58","#EF5350","#42A5F5"];
+  for(let i=0;i<24;i++){
+    const p = document.createElement("div");
+    p.className = "confetti-piece";
+    p.style.left = (10+Math.random()*80)+"%";
+    p.style.background = colors[i%colors.length];
+    p.style.animationDuration = (0.9+Math.random()*0.6)+"s";
+    container.appendChild(p);
+    setTimeout(()=>p.remove(), 1600);
+  }
+}
+
+/* ================= LEVEL 2: Harvest canvas game ================= */
+const l2Canvas = document.getElementById("l2Canvas");
+const l2Ctx = l2Canvas.getContext("2d");
+const l2Wrap = document.getElementById("l2Wrap");
+const l2TimeEl = document.getElementById("l2Time");
+const l2ScoreEl = document.getElementById("l2Score");
+const l2StartBtn = document.getElementById("l2StartBtn");
+
+let l2 = { running:false, items:[], basketX:0.5, score:0, timeLeft:30, lastSpawn:0, keys:{} };
+
+function resizeCanvas(){
+  const r = l2Wrap.getBoundingClientRect();
+  l2Canvas.width = r.width; l2Canvas.height = r.height;
+}
+window.addEventListener("resize", resizeCanvas);
+
+function drawBackground(){
+  const g = l2Ctx.createLinearGradient(0,0,0,l2Canvas.height);
+  g.addColorStop(0,"#3a1f4d"); g.addColorStop(0.45,"#c1543f"); g.addColorStop(0.75,"#f2a154"); g.addColorStop(1,"#3a2a12");
+  l2Ctx.fillStyle = g; l2Ctx.fillRect(0,0,l2Canvas.width,l2Canvas.height);
+  l2Ctx.fillStyle = "rgba(255,244,214,0.9)";
+  l2Ctx.beginPath(); l2Ctx.arc(l2Canvas.width*0.82, l2Canvas.height*0.2, 26, 0, Math.PI*2); l2Ctx.fill();
+  l2Ctx.fillStyle = "#2e2115";
+  l2Ctx.fillRect(0, l2Canvas.height-18, l2Canvas.width, 18);
+}
+function drawBasket(){
+  const w = 74, h=34;
+  const x = l2.basketX*l2Canvas.width - w/2;
+  const y = l2Canvas.height-18-h+6;
+  const g = l2Ctx.createLinearGradient(x,y,x,y+h);
+  g.addColorStop(0,"#a9662b"); g.addColorStop(1,"#6b3d16");
+  l2Ctx.fillStyle = g;
+  l2Ctx.beginPath();
+  l2Ctx.moveTo(x, y);
+  l2Ctx.lineTo(x+w, y);
+  l2Ctx.lineTo(x+w-8, y+h);
+  l2Ctx.lineTo(x+8, y+h);
+  l2Ctx.closePath(); l2Ctx.fill();
+  l2Ctx.strokeStyle = "#4a2a0f"; l2Ctx.lineWidth=2;
+  for(let i=1;i<4;i++){ l2Ctx.beginPath(); l2Ctx.moveTo(x+8+i*(w-16)/4,y); l2Ctx.lineTo(x+4+i*(w-8)/4,y+h); l2Ctx.stroke(); }
+}
+function drawItem(it){
+  const {x,y,type} = it;
+  l2Ctx.save(); l2Ctx.translate(x,y);
+  if(type==="chestnut"){
+    l2Ctx.fillStyle="#6d4023"; l2Ctx.beginPath(); l2Ctx.ellipse(0,0,13,15,0,0,Math.PI*2); l2Ctx.fill();
+    l2Ctx.fillStyle="#e8dcc0"; l2Ctx.beginPath(); l2Ctx.ellipse(0,-12,6,5,0,0,Math.PI*2); l2Ctx.fill();
+  } else if(type==="persimmon"){
+    l2Ctx.fillStyle="#e8791a"; l2Ctx.beginPath(); l2Ctx.arc(0,0,14,0,Math.PI*2); l2Ctx.fill();
+    l2Ctx.fillStyle="#4a7a2e"; l2Ctx.fillRect(-6,-16,12,6);
+  } else if(type==="grain"){
+    l2Ctx.strokeStyle="#e8c25a"; l2Ctx.lineWidth=3; l2Ctx.beginPath(); l2Ctx.moveTo(0,14); l2Ctx.lineTo(0,-14); l2Ctx.stroke();
+    for(let i=-10;i<=10;i+=6){ l2Ctx.beginPath(); l2Ctx.ellipse(4,i,5,3,0.6,0,Math.PI*2); l2Ctx.fillStyle="#f4d87a"; l2Ctx.fill(); }
+  } else if(type==="rock"){
+    l2Ctx.fillStyle="#7d7d7d"; l2Ctx.beginPath();
+    l2Ctx.moveTo(-12,6); l2Ctx.lineTo(-6,-10); l2Ctx.lineTo(8,-12); l2Ctx.lineTo(13,4); l2Ctx.lineTo(2,12); l2Ctx.closePath(); l2Ctx.fill();
+  } else if(type==="bug"){
+    l2Ctx.fillStyle="#6b2c91"; l2Ctx.beginPath(); l2Ctx.ellipse(0,0,10,7,0,0,Math.PI*2); l2Ctx.fill();
+    l2Ctx.strokeStyle="#6b2c91"; l2Ctx.lineWidth=2;
+    l2Ctx.beginPath(); l2Ctx.moveTo(-8,-4); l2Ctx.lineTo(-14,-9); l2Ctx.moveTo(8,-4); l2Ctx.lineTo(14,-9); l2Ctx.stroke();
+  }
+  l2Ctx.restore();
+}
+const GOOD_TYPES = ["chestnut","persimmon","grain"];
+const BAD_TYPES = ["rock","bug"];
+
+function l2Spawn(){
+  const isBad = Math.random() < 0.28;
+  const type = isBad ? BAD_TYPES[Math.floor(Math.random()*BAD_TYPES.length)] : GOOD_TYPES[Math.floor(Math.random()*GOOD_TYPES.length)];
+  l2.items.push({ x: 30+Math.random()*(l2Canvas.width-60), y:-20, type, bad:isBad, speed: 90+Math.random()*70 });
+}
+
+let l2LastTs = 0, l2TimerId = null, l2RafId = null;
+function l2Loop(ts){
+  if(!l2.running) return;
+  const dt = Math.min(0.05,(ts-l2LastTs)/1000 || 0); l2LastTs = ts;
+  if(ts - l2.lastSpawn > 650){ l2Spawn(); l2.lastSpawn = ts; }
+  drawBackground(); drawBasket();
+  const basketY = l2Canvas.height-18-6, basketHalf = 37;
+  l2.items = l2.items.filter(it=>{
+    it.y += it.speed*dt;
+    drawItem(it);
+    const bx = l2.basketX*l2Canvas.width;
+    if(it.y > basketY-10 && it.y < basketY+16 && Math.abs(it.x-bx) < basketHalf){
+      l2.score += it.bad ? -2 : 3;
+      l2.score = Math.max(0,l2.score);
+      l2ScoreEl.textContent = l2.score;
+      it.bad ? sfx.wrong() : sfx.correct();
+      return false;
+    }
+    return it.y < l2Canvas.height+20;
+  });
+  const speed = 5.2;
+  if(l2.keys.left) l2.basketX = Math.max(0.06, l2.basketX-0.012*speed);
+  if(l2.keys.right) l2.basketX = Math.min(0.94, l2.basketX+0.012*speed);
+  l2RafId = requestAnimationFrame(l2Loop);
+}
+
+function l2Start(){
+  resizeCanvas();
+  l2 = { running:true, items:[], basketX:0.5, score:0, timeLeft:30, lastSpawn:0, keys:{} };
+  l2ScoreEl.textContent = "0"; l2TimeEl.textContent = "30";
+  l2StartBtn.style.display = "none";
+  l2LastTs = performance.now();
+  l2RafId = requestAnimationFrame(l2Loop);
+  l2TimerId = setInterval(()=>{
+    l2.timeLeft--; l2TimeEl.textContent = l2.timeLeft;
+    if(l2.timeLeft<=0) l2End();
+  },1000);
+}
+function l2End(){
+  l2.running = false;
+  clearInterval(l2TimerId); cancelAnimationFrame(l2RafId);
+  l2StartBtn.style.display = "";
+  l2StartBtn.innerHTML = '<i data-lucide="rotate-ccw" class="w-4 h-4"></i>다시 수확하기';
+  safeIcons();
+  showFactPopup(L2_FACTS);
+}
+l2StartBtn.addEventListener("click", l2Start);
+window.addEventListener("keydown", (e)=>{
+  if(e.key==="ArrowLeft") l2.keys.left = true;
+  if(e.key==="ArrowRight") l2.keys.right = true;
+});
+window.addEventListener("keyup", (e)=>{
+  if(e.key==="ArrowLeft") l2.keys.left = false;
+  if(e.key==="ArrowRight") l2.keys.right = false;
+});
+function bindHold(btn, key){
+  const on = (e)=>{ e.preventDefault(); l2.keys[key]=true; };
+  const off = ()=>{ l2.keys[key]=false; };
+  btn.addEventListener("pointerdown", on);
+  ["pointerup","pointerleave","pointercancel"].forEach(ev=>btn.addEventListener(ev, off));
+}
+bindHold(document.getElementById("l2Left"), "left");
+bindHold(document.getElementById("l2Right"), "right");
+
+/* ================= LEVEL 3: Fact-check flip cards ================= */
+const l3CardEl = document.getElementById("l3Card");
+const l3Claim = document.getElementById("l3Claim");
+const l3Counter = document.getElementById("l3Counter");
+const l3ResultTag = document.getElementById("l3ResultTag");
+const l3Explain = document.getElementById("l3Explain");
+const l3Source = document.getElementById("l3Source");
+let l3Index = 0;
+let l3Initialized = false;
+
+function renderL3Card(){
+  const total = FACT_CARDS.length;
+  l3Index = ((l3Index % total) + total) % total;
+  const card = FACT_CARDS[l3Index];
+  l3CardEl.classList.remove("flipped");
+  l3Claim.textContent = card.claim;
+  l3Counter.textContent = `${l3Index+1}/${total}`;
+}
+function judgeL3(pick){
+  const card = FACT_CARDS[l3Index];
+  const isRight = pick === card.verdict;
+  isRight ? sfx.correct() : sfx.wrong();
+  l3ResultTag.textContent = (card.verdict==="오해" ? "❌ 오해였어요" : "⭕ 진실이었어요") + (isRight ? " · 정확해요!" : " · 다시 생각해봐요");
+  l3Explain.textContent = card.explain;
+  l3Source.href = card.url;
+  l3Source.textContent = "출처: " + hostname(card.url);
+  l3CardEl.classList.add("flipped");
+}
+document.querySelectorAll("#l3Front [data-verdict]").forEach(btn=>{
+  btn.addEventListener("click", ()=> judgeL3(btn.dataset.verdict));
+});
+document.getElementById("l3NextBtn").addEventListener("click", ()=>{ l3Index++; renderL3Card(); });
+
+function initLevel3(){
+  if(l3Initialized) return;
+  l3Initialized = true;
+  l3Index = 0;
+  renderL3Card();
+}
+// Render immediately at load so the counter is never 0/0.
+renderL3Card();
+l3Initialized = true;
+
+/* ================= BONUS: Typing arcade ================= */
+const bonusField = document.getElementById("bonusField");
+const bonusInput = document.getElementById("bonusInput");
+const bonusScoreEl = document.getElementById("bonusScore");
+const bonusHeartsEl = document.getElementById("bonusHearts");
+const bonusStartBtn = document.getElementById("bonusStartBtn");
+
+let bonus = { running:false, words:[], score:0, life:3, lastSpawn:0, elapsed:0 };
+let bonusRaf = null, bonusLastTs = 0;
+
+function renderHearts(){
+  bonusHeartsEl.innerHTML = "";
+  for(let i=0;i<3;i++){
+    const span = document.createElement("i");
+    span.setAttribute("data-lucide", i<bonus.life ? "heart" : "heart-crack");
+    span.className = "w-4 h-4" + (i<bonus.life ? "" : " heart-lost");
+    span.style.color = i<bonus.life ? "#ef5350" : "#888";
+    bonusHeartsEl.appendChild(span);
+  }
+  safeIcons();
+}
+
+function bonusSpawnWord(){
+  const isTrap = Math.random() < 0.32;
+  const pool = isTrap ? BONUS_TRAP_WORDS : BONUS_GOOD_WORDS;
+  const word = pool[Math.floor(Math.random()*pool.length)];
+  const el = document.createElement("div");
+  el.className = "word-chip " + (isTrap ? "trap" : "good");
+  el.textContent = word;
+  const xPct = 8 + Math.random()*84;
+  el.style.left = xPct + "%";
+  el.style.top = "-30px";
+  bonusField.appendChild(el);
+  bonus.words.push({ word, isTrap, el, y:-30, speed: 26+Math.random()*18 });
+}
+
+function bonusLoop(ts){
+  if(!bonus.running) return;
+  const dt = Math.min(0.05,(ts-bonusLastTs)/1000||0); bonusLastTs = ts;
+  bonus.elapsed += dt;
+  if(ts - bonus.lastSpawn > 1000){ bonusSpawnWord(); bonus.lastSpawn = ts; }
+  const fieldH = bonusField.clientHeight;
+  bonus.words = bonus.words.filter(w=>{
+    w.y += w.speed*dt;
+    w.el.style.top = w.y + "px";
+    if(w.y > fieldH){ w.el.remove(); return false; }
+    return true;
+  });
+  bonusRaf = requestAnimationFrame(bonusLoop);
+}
+
+function bonusStart(){
+  bonus.words.forEach(w=>w.el.remove());
+  bonus = { running:true, words:[], score:0, life:3, lastSpawn:0, elapsed:0 };
+  bonusScoreEl.textContent = "0";
+  renderHearts();
+  bonusStartBtn.style.display = "none";
+  bonusInput.value = "";
+  bonusInput.focus();
+  bonusLastTs = performance.now();
+  bonusRaf = requestAnimationFrame(bonusLoop);
+}
+function bonusEnd(reason){
+  bonus.running = false;
+  cancelAnimationFrame(bonusRaf);
+  bonus.words.forEach(w=>w.el.remove());
+  bonusStartBtn.style.display = "";
+  bonusStartBtn.innerHTML = '<i data-lucide="rotate-ccw" class="w-4 h-4"></i>다시 도전하기';
+  safeIcons();
+  showFactPopup(BONUS_NOTE_FACTS);
+}
+bonusStartBtn.addEventListener("click", bonusStart);
+
+bonusInput.addEventListener("input", ()=>{
+  sfx.type();
+  const typed = bonusInput.value.trim();
+  if(!typed || !bonus.running) return;
+  const idx = bonus.words.findIndex(w=>w.word===typed);
+  if(idx>-1){
+    const w = bonus.words[idx];
+    w.el.remove();
+    bonus.words.splice(idx,1);
+    if(w.isTrap){
+      bonus.life--;
+      sfx.wrong();
+      renderHearts();
+      if(bonus.life<=0){ bonusInput.value=""; bonusEnd("life"); return; }
+    } else {
+      bonus.score += 10;
+      bonusScoreEl.textContent = bonus.score;
+      sfx.correct();
+    }
+    bonusInput.value = "";
+  }
+});
+bonusInput.addEventListener("keydown", (e)=>{ if(e.key==="Enter"){ bonusInput.value=""; } });
+
+/* ================= ENDING ================= */
+document.getElementById("endShowBtn").addEventListener("click", ()=>{
+  const box = document.getElementById("endReflection");
+  const txt = document.getElementById("endText").value.trim();
+  document.getElementById("endReflectionText").textContent = txt
+    ? `"${txt}" — 소중한 이야기네요. 추석을 보내는 모습은 이렇게 저마다 다르고, 그 자체로 다 괜찮아요.`
+    : "무엇이든 좋아요. 추석을 보내는 모습은 집집마다 달라요 — 그 자체로 다 괜찮아요.";
+  box.hidden = false;
+});
+function renderEnding(){
+  const list = document.getElementById("sourceList");
+  list.innerHTML = "";
+  collectAllSources().forEach(f=>{
+    const li = document.createElement("li");
+    li.innerHTML = `<a href="${f.url}" target="_blank" rel="noopener" class="underline text-white/80 hover:text-white">${f.text}</a> <span class="text-white/40">(${hostname(f.url)})</span>`;
+    list.appendChild(li);
+  });
+}
+
+/* ============ init ============ */
+safeIcons();
+showLevel("l1");
+})();
+</script>
+</body>
+</html>
