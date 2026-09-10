@@ -114,6 +114,14 @@
   @keyframes confettiFall{
     to{ transform:translateY(320px) rotate(540deg); opacity:0; }
   }
+  .songpyeon-plate{
+    width:230px; min-height:56px; border-radius:999px;
+    background:radial-gradient(ellipse at 50% 35%, #fdf8ec 0%, #f1e6c8 65%, #d8c69a 100%);
+    border:2px solid #c9b587; box-shadow: inset 0 2px 6px rgba(0,0,0,.18);
+    display:flex; align-items:center; justify-content:center; gap:4px; flex-wrap:wrap; padding:6px 10px;
+  }
+  .songpyeon-plate .plate-piece svg{ filter: drop-shadow(0 2px 2px rgba(0,0,0,.2)); }
+  .ingredient-chip[data-disabled="true"]{ opacity:.35; pointer-events:none; cursor:default; }
 
   /* ---------- Level 3: flip card ---------- */
   .flip-scene{ perspective:1400px; }
@@ -127,6 +135,22 @@
     border-radius:1.25rem; padding:1.5rem; display:flex; flex-direction:column;
   }
   .flip-back{ transform:rotateY(180deg); }
+  .card-elegant{
+    position:relative;
+    color:#3a2c1d;
+    font-family: Georgia, 'Nanum Myeongjo', Batang, serif;
+    background:
+      repeating-linear-gradient(45deg, rgba(180,150,100,0.05) 0px, rgba(180,150,100,0.05) 2px, transparent 2px, transparent 6px),
+      radial-gradient(ellipse at 30% 20%, #fffaf0 0%, #f6ecd6 55%, #ecdcb8 100%);
+    border:1px solid #d9c69c;
+    box-shadow: inset 0 0 30px rgba(120,90,40,0.12), 0 8px 20px rgba(0,0,0,.25);
+    overflow:hidden;
+    padding-top:4.75rem;
+  }
+  .card-elegant .lattice-corner{ position:absolute; width:46px; height:46px; opacity:.55; pointer-events:none; }
+  .card-elegant .lattice-tl{ top:10px; left:10px; }
+  .card-elegant .lattice-br{ bottom:10px; right:10px; transform:rotate(180deg); }
+  .card-elegant .tassel-ornament{ position:absolute; top:8px; left:50%; transform:translateX(-50%); width:54px; height:70px; opacity:.85; pointer-events:none; }
 
   /* ---------- Bonus: typing arcade ---------- */
   .word-chip{
@@ -316,6 +340,11 @@
         </div>
       </div>
 
+      <div class="flex items-center gap-2 mt-3 flex-wrap">
+        <div class="songpyeon-plate" id="l1Plate" aria-label="전시 접시"></div>
+        <span class="text-xs text-white/60" id="l1PlateCount">0/4 완성</span>
+      </div>
+
       <div class="flex items-center justify-between mt-3">
         <span class="text-xs text-white/50" id="l1Status">속재료를 먼저 골라주세요</span>
         <button class="btn btn-jade" id="l1SteamBtn" disabled><i data-lucide="flame" class="w-4 h-4"></i>솔잎 깔고 찌기</button>
@@ -349,7 +378,24 @@
       </div>
       <div class="flex-1 flip-scene">
         <div class="flip-card" id="l3Card">
-          <div class="flip-face glass-card" id="l3Front">
+          <div class="flip-face card-elegant" id="l3Front">
+            <svg class="lattice-corner lattice-tl" viewBox="0 0 46 46" fill="none" stroke="#3a2c1d" stroke-width="1" aria-hidden="true">
+              <path d="M0,0 H46 M0,0 V46 M0,11.5 H34.5 M0,23 H23 M0,34.5 H11.5 M11.5,0 V34.5 M23,0 V23 M34.5,0 V11.5" />
+            </svg>
+            <svg class="lattice-corner lattice-br" viewBox="0 0 46 46" fill="none" stroke="#3a2c1d" stroke-width="1" aria-hidden="true">
+              <path d="M0,0 H46 M0,0 V46 M0,11.5 H34.5 M0,23 H23 M0,34.5 H11.5 M11.5,0 V34.5 M23,0 V23 M34.5,0 V11.5" />
+            </svg>
+            <svg class="tassel-ornament" viewBox="0 0 60 80" fill="none" stroke="#3a2c1d" stroke-width="1" aria-hidden="true">
+              <polygon points="30,4 40,8 46,16 46,26 40,34 30,38 20,34 14,26 14,16 20,8" />
+              <polygon points="30,10 36,13 39,18 39,24 36,29 30,32 24,29 21,24 21,18 24,13" />
+              <line x1="30" y1="38" x2="30" y2="46" />
+              <path d="M18,46 C10,42 8,54 18,52 C24,51 24,53 30,53 C36,53 36,51 42,52 C52,54 50,42 42,46 C36,49 36,49 30,49 C24,49 24,49 18,46 Z" />
+              <circle cx="30" cy="53" r="2.2" fill="#3a2c1d" stroke="none" />
+              <circle cx="22" cy="58" r="2" /><circle cx="30" cy="60" r="2" /><circle cx="38" cy="58" r="2" />
+              <line x1="30" y1="62" x2="30" y2="78" />
+              <line x1="26" y1="63" x2="24" y2="78" /><line x1="34" y1="63" x2="36" y2="78" />
+              <line x1="23" y1="65" x2="19" y2="79" /><line x1="37" y1="65" x2="41" y2="79" />
+            </svg>
             <p class="text-xs uppercase tracking-wide text-black/50 mb-2">이 이야기, 오해일까 진실일까?</p>
             <p class="text-lg font-bold flex-1" id="l3Claim">불러오는 중…</p>
             <div class="flex gap-3 mt-4">
@@ -357,7 +403,24 @@
               <button class="btn btn-ghost flex-1" style="background:#e3f3e6;color:#1f5c2f;border-color:#b6e0be" data-verdict="사실"><i data-lucide="check" class="w-4 h-4"></i>⭕ 진실</button>
             </div>
           </div>
-          <div class="flip-face flip-back glass-card" id="l3Back">
+          <div class="flip-face flip-back card-elegant" id="l3Back">
+            <svg class="lattice-corner lattice-tl" viewBox="0 0 46 46" fill="none" stroke="#3a2c1d" stroke-width="1" aria-hidden="true">
+              <path d="M0,0 H46 M0,0 V46 M0,11.5 H34.5 M0,23 H23 M0,34.5 H11.5 M11.5,0 V34.5 M23,0 V23 M34.5,0 V11.5" />
+            </svg>
+            <svg class="lattice-corner lattice-br" viewBox="0 0 46 46" fill="none" stroke="#3a2c1d" stroke-width="1" aria-hidden="true">
+              <path d="M0,0 H46 M0,0 V46 M0,11.5 H34.5 M0,23 H23 M0,34.5 H11.5 M11.5,0 V34.5 M23,0 V23 M34.5,0 V11.5" />
+            </svg>
+            <svg class="tassel-ornament" viewBox="0 0 60 80" fill="none" stroke="#3a2c1d" stroke-width="1" aria-hidden="true">
+              <polygon points="30,4 40,8 46,16 46,26 40,34 30,38 20,34 14,26 14,16 20,8" />
+              <polygon points="30,10 36,13 39,18 39,24 36,29 30,32 24,29 21,24 21,18 24,13" />
+              <line x1="30" y1="38" x2="30" y2="46" />
+              <path d="M18,46 C10,42 8,54 18,52 C24,51 24,53 30,53 C36,53 36,51 42,52 C52,54 50,42 42,46 C36,49 36,49 30,49 C24,49 24,49 18,46 Z" />
+              <circle cx="30" cy="53" r="2.2" fill="#3a2c1d" stroke="none" />
+              <circle cx="22" cy="58" r="2" /><circle cx="30" cy="60" r="2" /><circle cx="38" cy="58" r="2" />
+              <line x1="30" y1="62" x2="30" y2="78" />
+              <line x1="26" y1="63" x2="24" y2="78" /><line x1="34" y1="63" x2="36" y2="78" />
+              <line x1="23" y1="65" x2="19" y2="79" /><line x1="37" y1="65" x2="41" y2="79" />
+            </svg>
             <p class="text-sm font-bold mb-1" id="l3ResultTag"></p>
             <p class="text-sm flex-1 leading-relaxed" id="l3Explain"></p>
             <a href="#" target="_blank" rel="noopener" class="text-xs underline text-blue-700 mb-3" id="l3Source">출처 보기</a>
@@ -443,6 +506,18 @@ const FACT_CARDS = [
   { claim:"지방(紙榜)을 쓰기 어려우면 차례를 지낼 수 없다.", verdict:"오해",
     explain:"성균관 표준안에는 지방 쓰기 어려우면 사진을 놓고 차례를 지내도 된다는 내용도 담겨 있어요.",
     url:"https://mobile.newsis.com/view/NISX20220908_0002008425" },
+  { claim:"'한가위'라는 말에는 '8월의 한가운데'라는 뜻이 담겨 있다.", verdict:"사실",
+    explain:"'한'(크다)+'가위'(가운데)가 합쳐진 말이에요.",
+    url:"https://www.dhnews.co.kr/news/view/179510669157082" },
+  { claim:"강강술래는 2009년 유네스코 인류무형문화유산에 등재됐다.", verdict:"사실",
+    explain:"전라남도 해안 지역에서 전승된 이 놀이가 국제적으로 인정받았어요.",
+    url:"https://www.sidae.com/article/2015120310328068262" },
+  { claim:"요즘도 예전 방식 그대로 차례상을 차리는 집이 대부분이다.", verdict:"오해",
+    explain:"최근에는 차례상을 간소화하거나, 차례 대신 다 같이 식사만 하는 집도 점점 늘고 있어요.",
+    url:"https://kbmaeil.com/article/202409100405094" },
+  { claim:"추석은 미국의 추수감사절과 사실상 같은 명절이다.", verdict:"오해",
+    explain:"추석은 고대부터 이어진 수확·조상 감사 명절이고, 추수감사절은 종교적 감사·만찬이 중심인 근대(1863년 공식화) 명절이라 성격이 달라요.",
+    url:"https://www.voakorea.com/a/a-35-2007-11-22-voa4-91289069/1310029.html" },
 ];
 
 const BONUS_NOTE_FACTS = [
@@ -499,7 +574,8 @@ function showLevel(id){
   closeActivePopup();
   Object.entries(panes).forEach(([key,el])=>{ el.hidden = key!==id; });
   tabBtns.forEach(b=>b.dataset.active = (b.dataset.level===id) ? "true" : "false");
-  if(id==="l3") initLevel3();
+  if(id==="l1" && !l1IntroShown){ l1IntroShown = true; showL1Intro(); }
+  if(id==="l3" && !l3IntroShown){ l3IntroShown = true; showL3Intro(); }
   if(id==="end") renderEnding();
 }
 tabBtns.forEach(b=> b.addEventListener("click", ()=> showLevel(b.dataset.level)) );
@@ -509,7 +585,39 @@ let activePopup = null;
 function closeActivePopup(){
   if(activePopup){ activePopup.remove(); activePopup = null; }
 }
-function showFactPopup(facts){
+
+let endingShown = false;
+function checkAllComplete(afterClosing){
+  const allDone = l1AllDone && l2EverCompleted && (l3Seen.size >= FACT_CARDS.length);
+  if(allDone && !endingShown){
+    endingShown = true;
+    showGameEnding(afterClosing);
+  } else if(typeof afterClosing === "function"){
+    afterClosing();
+  }
+}
+function showGameEnding(afterClosing){
+  closeActivePopup();
+  const overlay = document.createElement("div");
+  overlay.className = "absolute inset-0 z-30 flex items-center justify-center p-4";
+  overlay.style.background = "rgba(10,12,30,0.55)";
+  const box = document.createElement("div");
+  box.className = "glass-card rounded-2xl p-5 max-w-sm w-full max-h-[80%] overflow-y-auto";
+  box.innerHTML = `
+    <h3 class="font-bold mb-3 flex items-center gap-2">🌕 토끼 요정의 인사</h3>
+    <p class="text-sm leading-relaxed mb-4">덕분에 추석을 잘 준비할 수 있었어요! 정말 고마워요 🐇🌕</p>
+    <button class="btn btn-jade w-full" data-close>확인</button>`;
+  overlay.appendChild(box);
+  document.getElementById("viewport").appendChild(overlay);
+  activePopup = overlay;
+  safeIcons();
+  box.querySelector("[data-close]").addEventListener("click", ()=>{
+    closeActivePopup();
+    if(typeof afterClosing === "function") afterClosing();
+  });
+  overlay.addEventListener("click", (e)=>{ if(e.target===overlay) closeActivePopup(); });
+}
+function showFactPopup(facts, onConfirm){
   closeActivePopup();
   const overlay = document.createElement("div");
   overlay.className = "absolute inset-0 z-30 flex items-center justify-center p-4";
@@ -522,10 +630,42 @@ function showFactPopup(facts){
   overlay.appendChild(box);
   document.getElementById("viewport").appendChild(overlay);
   activePopup = overlay;
-  box.querySelector("[data-close]").addEventListener("click", closeActivePopup);
+  box.querySelector("[data-close]").addEventListener("click", ()=>{
+    closeActivePopup();
+    if(typeof onConfirm === "function") onConfirm();
+  });
   overlay.addEventListener("click", (e)=>{ if(e.target===overlay) closeActivePopup(); });
 }
 document.getElementById("l1FactBtn").addEventListener("click", ()=> showFactPopup(L1_FACTS.slice(0,2)) );
+
+const L2_RESULT_THRESHOLD = 15;
+const BONUS_RESULT_THRESHOLD = 30;
+function showRoundResult({ roundScore, threshold, thanksLine, retryLine, onRetry }){
+  closeActivePopup();
+  const overlay = document.createElement("div");
+  overlay.className = "absolute inset-0 z-30 flex items-center justify-center p-4";
+  overlay.style.background = "rgba(10,12,30,0.55)";
+  const box = document.createElement("div");
+  box.className = "glass-card rounded-2xl p-5 max-w-sm w-full max-h-[80%] overflow-y-auto";
+  const reaction = roundScore >= threshold ? thanksLine : retryLine;
+  box.innerHTML = `
+    <h3 class="font-bold mb-3 flex items-center gap-2">🐇 결과</h3>
+    <p class="text-sm leading-relaxed mb-3">${reaction}</p>
+    <div class="text-sm mb-4 space-y-1">
+      <p>이번 판 점수: <b>${roundScore}점</b></p>
+      <p>지금까지의 총점: <b>${totalScoreVal.textContent}점</b></p>
+    </div>
+    <button class="btn btn-primary w-full" data-retry><i data-lucide="rotate-ccw" class="w-4 h-4"></i>다시하기</button>`;
+  overlay.appendChild(box);
+  document.getElementById("viewport").appendChild(overlay);
+  activePopup = overlay;
+  safeIcons();
+  box.querySelector("[data-retry]").addEventListener("click", ()=>{
+    closeActivePopup();
+    if(typeof onRetry === "function") onRetry();
+  });
+  overlay.addEventListener("click", (e)=>{ if(e.target===overlay) closeActivePopup(); });
+}
 
 /* ============ Total score (recomputed live from each level's current state) ============ */
 const totalScoreVal = document.getElementById("totalScoreVal");
@@ -533,7 +673,7 @@ const L1_COMPLETE_BONUS = 20;
 const L3_COMPLETE_BONUS = 30;
 function updateTotalScore(){
   let total = l2.score + bonus.score;
-  if(l1.steamed) total += L1_COMPLETE_BONUS;
+  if(l1AllDone) total += L1_COMPLETE_BONUS;
   if(l3Seen.size >= FACT_CARDS.length) total += L3_COMPLETE_BONUS;
   totalScoreVal.textContent = total;
 }
@@ -543,12 +683,15 @@ const dough = document.getElementById("dough");
 const l1Status = document.getElementById("l1Status");
 const l1SteamBtn = document.getElementById("l1SteamBtn");
 const l1Rabbit = document.getElementById("l1Rabbit");
-let l1 = { filling:null, taps:0, shaped:false, steamed:false };
+let l1 = { filling:null, taps:0, shaped:false, steamed:false, completed:[] };
+let l1IntroShown = false;
+let l1AllDone = false;
+const L1_PLATE_COLORS = { mugwort:"#8fbf5a", pumpkin:"#f0a93a", redbean:"#e8a5a5", sesame:"#f2e3b8" };
 
 document.querySelectorAll(".ingredient-chip").forEach(chip=>{
   let dragEl = null;
   chip.addEventListener("pointerdown", (e)=>{
-    if(l1.steamed) return;
+    if(l1.steamed || chip.dataset.disabled==="true") return;
     chip.setPointerCapture(e.pointerId);
     dragEl = chip.cloneNode(true);
     dragEl.classList.add("drag-ghost");
@@ -596,7 +739,6 @@ dough.addEventListener("keydown", (e)=>{ if(e.key==="Enter"||e.key===" "){ e.pre
 l1SteamBtn.addEventListener("click", ()=>{
   if(l1.steamed) return;
   l1.steamed = true;
-  updateTotalScore();
   l1SteamBtn.disabled = true;
   const stage = document.getElementById("l1Stage");
   for(let i=0;i<6;i++){
@@ -608,7 +750,7 @@ l1SteamBtn.addEventListener("click", ()=>{
   }
   setTimeout(()=>{
     dough.dataset.stage = "steamed";
-    l1Status.textContent = "완성! 달토끼를 흔들어 축하해보세요 🎉";
+    l1Status.textContent = "완성! 달토끼를 흔들어 접시에 담아보세요 🎉";
     l1Rabbit.style.display = "block";
   }, 1200);
 });
@@ -618,7 +760,68 @@ l1Rabbit.addEventListener("pointerdown", ()=>{
   rabbitDrags++;
   fireConfetti(document.getElementById("l1Stage"));
   sfx.correct();
+  completeCurrentPiece();
 });
+
+function platePieceSVG(key){
+  const color = L1_PLATE_COLORS[key] || "#f0e6c8";
+  return `<svg width="34" height="26" viewBox="0 0 170 170" aria-hidden="true">
+    <path d="M25,108 L24.3,102.5 L22.7,96.7 L22,90.7 L23.1,85.1 L25.9,80.2 L29,75.9 L31.2,71.3 L32.2,65.8 L32.8,59.8 L34.4,54.3 L37.3,50.2 L41.3,47.5 L45.2,45.2 L48.4,42.1 L51.1,37.7 L53.7,33 L57,29.3 L60.9,27.6 L65.2,27.5 L69.4,27.5 L73.3,26.4 L77,24 L80.9,21.6 L85,20.5 L89.1,21.6 L93,24 L96.7,26.4 L100.6,27.5 L104.8,27.5 L109.1,27.6 L113,29.3 L116.3,33 L118.9,37.7 L121.6,42.1 L124.8,45.2 L128.7,47.5 L132.7,50.2 L135.6,54.3 L137.2,59.8 L137.8,65.8 L138.8,71.3 L141,75.9 L144.1,80.2 L146.9,85.1 L148,90.7 L147.3,96.7 L145.7,102.5 L145,108 Q145,125 125,127 L45,127 Q25,125 25,108 Z"
+      fill="${color}" stroke="rgba(110,84,40,.4)" stroke-width="3"/></svg>`;
+}
+function addPlatePiece(key){
+  const plate = document.getElementById("l1Plate");
+  const piece = document.createElement("span");
+  piece.className = "plate-piece";
+  piece.innerHTML = platePieceSVG(key);
+  plate.appendChild(piece);
+  document.getElementById("l1PlateCount").textContent = l1.completed.length + "/4 완성";
+}
+function disableChip(key){
+  const chip = document.querySelector('.ingredient-chip[data-key="'+key+'"]');
+  if(chip) chip.dataset.disabled = "true";
+}
+function completeCurrentPiece(){
+  const key = dough.dataset.filling;
+  if(!key || l1.completed.includes(key)) return;
+  l1.completed.push(key);
+  addPlatePiece(key);
+  disableChip(key);
+  l1Rabbit.style.display = "none";
+
+  if(l1.completed.length >= 4){
+    l1AllDone = true;
+    updateTotalScore();
+    showL1Complete();
+  } else {
+    l1.filling = null; l1.taps = 0; l1.shaped = false; l1.steamed = false;
+    dough.dataset.stage = "ball";
+    dough.dataset.filling = "";
+    l1SteamBtn.disabled = true;
+    l1Status.textContent = `잘했어요! 다음 재료를 골라주세요 (${l1.completed.length}/4)`;
+  }
+}
+function showL1Complete(){
+  closeActivePopup();
+  const overlay = document.createElement("div");
+  overlay.className = "absolute inset-0 z-30 flex items-center justify-center p-4";
+  overlay.style.background = "rgba(10,12,30,0.55)";
+  const box = document.createElement("div");
+  box.className = "glass-card rounded-2xl p-5 max-w-sm w-full max-h-[80%] overflow-y-auto";
+  box.innerHTML = `
+    <h3 class="font-bold mb-3 flex items-center gap-2">🐇 달토끼의 인사</h3>
+    <p class="text-sm leading-relaxed mb-4">쑥, 단호박, 팥, 깨 — 네 가지 송편이 모두 접시에 예쁘게 담겼어요!<br><br>정성껏 빚어줘서 정말 고마워요 🌕</p>
+    <button class="btn btn-jade w-full" data-close>확인</button>`;
+  overlay.appendChild(box);
+  document.getElementById("viewport").appendChild(overlay);
+  activePopup = overlay;
+  safeIcons();
+  box.querySelector("[data-close]").addEventListener("click", ()=>{
+    closeActivePopup();
+    checkAllComplete();
+  });
+  overlay.addEventListener("click", (e)=>{ if(e.target===overlay) closeActivePopup(); });
+}
 function fireConfetti(container){
   const colors = ["#FBC02D","#2E7D32","#FFEE58","#EF5350","#42A5F5"];
   for(let i=0;i<24;i++){
@@ -641,6 +844,7 @@ const l2ScoreEl = document.getElementById("l2Score");
 const l2StartBtn = document.getElementById("l2StartBtn");
 
 let l2 = { running:false, items:[], floatingTexts:[], basketX:0.5, score:0, timeLeft:30, lastSpawn:0, keys:{} };
+let l2EverCompleted = false;
 
 function resizeCanvas(){
   const r = l2Wrap.getBoundingClientRect();
@@ -938,7 +1142,39 @@ function l2End(){
   l2StartBtn.style.display = "";
   l2StartBtn.innerHTML = '<i data-lucide="rotate-ccw" class="w-4 h-4"></i>다시 수확하기';
   safeIcons();
-  showFactPopup(L2_FACTS);
+  l2EverCompleted = true;
+  const roundScore = l2.score;
+  showFactPopup(L2_FACTS, ()=>{
+    checkAllComplete(()=>{
+      showRoundResult({
+        roundScore,
+        threshold: L2_RESULT_THRESHOLD,
+        thanksLine: "고마워요! 덕분에 정말 큰 도움이 됐어요 🐇💛",
+        retryLine: "다음엔 더 잘할 수 있을 거예요! 다시 도전해볼까요?",
+        onRetry: showL2Intro,
+      });
+    });
+  });
+}
+function showL1Intro(){
+  closeActivePopup();
+  const overlay = document.createElement("div");
+  overlay.className = "absolute inset-0 z-30 flex items-center justify-center p-4";
+  overlay.style.background = "rgba(10,12,30,0.55)";
+  const box = document.createElement("div");
+  box.className = "glass-card rounded-2xl p-5 max-w-sm w-full max-h-[80%] overflow-y-auto";
+  box.innerHTML = `
+    <h3 class="font-bold mb-3 flex items-center gap-2">🐇 달토끼의 부탁</h3>
+    <p class="text-sm leading-relaxed mb-4">토끼 요정이 예쁜 송편을 접시에 담아 전시하고 싶어해요!<br><br>
+    쑥·단호박·팥·깨, 네 가지 재료로 하나씩 정성껏 빚어서 접시를 채워주세요.</p>
+    <button class="btn btn-primary w-full" data-close>빚으러 가기!</button>
+  `;
+  overlay.appendChild(box);
+  document.getElementById("viewport").appendChild(overlay);
+  activePopup = overlay;
+  safeIcons();
+  box.querySelector("[data-close]").addEventListener("click", closeActivePopup);
+  overlay.addEventListener("click", (e)=>{ if(e.target===overlay) closeActivePopup(); });
 }
 function showL2Intro(){
   closeActivePopup();
@@ -990,7 +1226,8 @@ const l3ResultTag = document.getElementById("l3ResultTag");
 const l3Explain = document.getElementById("l3Explain");
 const l3Source = document.getElementById("l3Source");
 let l3Index = 0;
-let l3Initialized = false;
+let l3IntroShown = false;
+let l3AllSeenShown = false;
 let l3Seen = new Set();
 
 function renderL3Card(){
@@ -1012,21 +1249,58 @@ function judgeL3(pick){
   l3CardEl.classList.add("flipped");
   l3Seen.add(l3Index);
   updateTotalScore();
+  if(!l3AllSeenShown && l3Seen.size >= FACT_CARDS.length){
+    l3AllSeenShown = true;
+    showL3Complete();
+  }
 }
 document.querySelectorAll("#l3Front [data-verdict]").forEach(btn=>{
   btn.addEventListener("click", ()=> judgeL3(btn.dataset.verdict));
 });
 document.getElementById("l3NextBtn").addEventListener("click", ()=>{ l3Index++; renderL3Card(); });
 
-function initLevel3(){
-  if(l3Initialized) return;
-  l3Initialized = true;
-  l3Index = 0;
-  renderL3Card();
+function showL3Intro(){
+  closeActivePopup();
+  const overlay = document.createElement("div");
+  overlay.className = "absolute inset-0 z-30 flex items-center justify-center p-4";
+  overlay.style.background = "rgba(10,12,30,0.55)";
+  const box = document.createElement("div");
+  box.className = "glass-card rounded-2xl p-5 max-w-sm w-full max-h-[80%] overflow-y-auto";
+  box.innerHTML = `
+    <h3 class="font-bold mb-3 flex items-center gap-2">🐇 토끼 요정의 부탁</h3>
+    <p class="text-sm leading-relaxed mb-4">추석에 관해 사람들이 흔히 오해하는 이야기들이 있어요.<br><br>
+    카드를 뒤집어서 오해인지 진실인지 맞혀보고, 진짜 이야기를 함께 알아가요!</p>
+    <button class="btn btn-primary w-full" data-close>시작하기</button>`;
+  overlay.appendChild(box);
+  document.getElementById("viewport").appendChild(overlay);
+  activePopup = overlay;
+  safeIcons();
+  box.querySelector("[data-close]").addEventListener("click", closeActivePopup);
+  overlay.addEventListener("click", (e)=>{ if(e.target===overlay) closeActivePopup(); });
+}
+function showL3Complete(){
+  closeActivePopup();
+  const overlay = document.createElement("div");
+  overlay.className = "absolute inset-0 z-30 flex items-center justify-center p-4";
+  overlay.style.background = "rgba(10,12,30,0.55)";
+  const box = document.createElement("div");
+  box.className = "glass-card rounded-2xl p-5 max-w-sm w-full max-h-[80%] overflow-y-auto";
+  box.innerHTML = `
+    <h3 class="font-bold mb-3 flex items-center gap-2">🐇 토끼 요정의 인사</h3>
+    <p class="text-sm leading-relaxed mb-4">덕분에 오해를 다 풀었어요! 고마워요 🌕</p>
+    <button class="btn btn-jade w-full" data-close>확인</button>`;
+  overlay.appendChild(box);
+  document.getElementById("viewport").appendChild(overlay);
+  activePopup = overlay;
+  safeIcons();
+  box.querySelector("[data-close]").addEventListener("click", ()=>{
+    closeActivePopup();
+    checkAllComplete();
+  });
+  overlay.addEventListener("click", (e)=>{ if(e.target===overlay) closeActivePopup(); });
 }
 // Render immediately at load so the counter is never 0/0.
 renderL3Card();
-l3Initialized = true;
 
 /* ================= BONUS: Typing arcade ================= */
 const bonusField = document.getElementById("bonusField");
@@ -1098,7 +1372,16 @@ function bonusEnd(reason){
   bonusStartBtn.style.display = "";
   bonusStartBtn.innerHTML = '<i data-lucide="rotate-ccw" class="w-4 h-4"></i>다시 도전하기';
   safeIcons();
-  showFactPopup(BONUS_NOTE_FACTS);
+  const roundScore = bonus.score;
+  showFactPopup(BONUS_NOTE_FACTS, ()=>{
+    showRoundResult({
+      roundScore,
+      threshold: BONUS_RESULT_THRESHOLD,
+      thanksLine: "고마워요! 덕분에 정말 큰 도움이 됐어요 🐇💛",
+      retryLine: "다음엔 더 잘할 수 있을 거예요! 다시 도전해볼까요?",
+      onRetry: bonusStart,
+    });
+  });
 }
 bonusStartBtn.addEventListener("click", bonusStart);
 
@@ -1146,10 +1429,35 @@ function renderEnding(){
   });
 }
 
+function showGameIntro(){
+  closeActivePopup();
+  const overlay = document.createElement("div");
+  overlay.className = "absolute inset-0 z-30 flex items-center justify-center p-4";
+  overlay.style.background = "rgba(10,12,30,0.55)";
+  const box = document.createElement("div");
+  box.className = "glass-card rounded-2xl p-5 max-w-sm w-full max-h-[80%] overflow-y-auto";
+  box.innerHTML = `
+    <h3 class="font-bold mb-3 flex items-center gap-2">🐇 토끼 요정과의 만남</h3>
+    <p class="text-sm leading-relaxed mb-4">안녕! 나는 한가위를 돕는 토끼 요정이야.<br><br>
+    송편도 빚고, 들판도 수확하고, 오해도 풀면서 함께 추석 준비를 도와줄래?</p>
+    <button class="btn btn-primary w-full" data-close>좋아, 도와줄게!</button>`;
+  overlay.appendChild(box);
+  document.getElementById("viewport").appendChild(overlay);
+  activePopup = overlay;
+  safeIcons();
+  box.querySelector("[data-close]").addEventListener("click", ()=>{
+    closeActivePopup();
+    showL1Intro();
+  });
+  overlay.addEventListener("click", (e)=>{ if(e.target===overlay) closeActivePopup(); });
+}
+
 /* ============ init ============ */
 safeIcons();
 updateTotalScore();
+l1IntroShown = true;
 showLevel("l1");
+showGameIntro();
 })();
 </script>
 </body>
