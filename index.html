@@ -61,6 +61,11 @@
     height:auto;
     min-height:620px;
   }
+  #viewport.viewport--l1{
+    aspect-ratio:auto;
+    height:auto;
+    min-height:512px;
+  }
   .level-pane{ position:absolute; inset:0; display:flex; flex-direction:column; }
   .level-pane[hidden]{ display:none !important; }
 
@@ -157,6 +162,32 @@
   .card-elegant .tassel-ornament{ position:absolute; top:8px; left:50%; transform:translateX(-50%); width:54px; height:70px; opacity:.85; pointer-events:none; }
 
   /* ---------- Bonus: typing arcade ---------- */
+  #bonusField{
+    background:
+      radial-gradient(circle at 78% 18%, rgba(255,245,214,.95) 0, rgba(255,235,180,.55) 7%, rgba(255,235,180,0) 14%),
+      radial-gradient(ellipse at 50% 120%, rgba(46,60,30,.9) 0%, rgba(26,30,54,0) 55%),
+      linear-gradient(180deg, #10132a 0%, #1a1e36 55%, #232a1a 100%);
+  }
+  #bonusField::before{
+    content:""; position:absolute; inset:0; pointer-events:none; opacity:.8;
+    background-image:
+      radial-gradient(1.5px 1.5px at 12% 22%, #fff, transparent),
+      radial-gradient(1.5px 1.5px at 30% 12%, #fff, transparent),
+      radial-gradient(1px 1px at 48% 30%, #fff, transparent),
+      radial-gradient(1.5px 1.5px at 62% 8%, #fff, transparent),
+      radial-gradient(1px 1px at 20% 45%, #fff, transparent),
+      radial-gradient(1.5px 1.5px at 88% 35%, #fff, transparent),
+      radial-gradient(1px 1px at 8% 65%, #fff, transparent);
+    background-repeat:no-repeat;
+  }
+  .hardmode-toast{
+    position:absolute; left:50%; top:10px; transform:translateX(-50%);
+    background:rgba(20,14,4,.85); color:#ffe9a8; font-size:.72rem; font-weight:700;
+    padding:.4rem .8rem; border-radius:999px; border:1px solid rgba(255,213,79,.5);
+    z-index:20; white-space:nowrap; opacity:0; transition:opacity .3s ease;
+    pointer-events:none;
+  }
+  .hardmode-toast.show{ opacity:1; }
   .word-chip{
     position:absolute; padding:.35rem .9rem; border-radius:999px; font-weight:700;
     white-space:nowrap; box-shadow:0 4px 10px rgba(0,0,0,.25); font-size:0.95rem;
@@ -203,7 +234,7 @@
   <nav class="flex flex-wrap gap-2 mb-4" id="tabNav" role="tablist" aria-label="레벨 선택">
     <button class="tab-btn btn btn-ghost" data-level="l1" role="tab"><i data-lucide="cookie" class="w-4 h-4"></i>1. 송편 공방</button>
     <button class="tab-btn btn btn-ghost" data-level="l2" role="tab"><i data-lucide="wheat" class="w-4 h-4"></i>2. 들판 수확</button>
-    <button class="tab-btn btn btn-ghost" data-level="l3" role="tab"><i data-lucide="layers" class="w-4 h-4"></i>3. 팩트체크</button>
+    <button class="tab-btn btn btn-ghost" data-level="l3" role="tab"><i data-lucide="layers" class="w-4 h-4"></i>3. 추석 사실 확인단</button>
     <button class="tab-btn btn btn-ghost" data-level="bonus" role="tab"><i data-lucide="keyboard" class="w-4 h-4"></i>보너스. 타자 산성</button>
     <button class="tab-btn btn btn-ghost" data-level="end" role="tab"><i data-lucide="home" class="w-4 h-4"></i>우리 집 추석</button>
     <button class="tab-btn btn btn-ghost" data-level="result" role="tab"><i data-lucide="image" class="w-4 h-4"></i>결과 카드</button>
@@ -219,8 +250,8 @@
       </div>
       <p class="text-xs text-white/60 mb-3" id="l1Hint">속재료를 반죽으로 옮기고, 반죽을 세 번 톡톡 두드려 빚어보세요.</p>
 
-      <div class="flex-1 grid sm:grid-cols-[1fr_auto] gap-4 items-center">
-        <div class="relative flex items-center justify-center h-full" id="l1Stage">
+      <div class="flex flex-col items-center justify-center gap-3">
+        <div class="relative flex items-center justify-center" id="l1Stage">
           <div class="dough" id="dough" data-stage="ball" tabindex="0" role="button" aria-label="반죽 두드리기">
             <svg class="stage-svg stage-ball" viewBox="0 0 170 170" aria-hidden="true">
               <defs><radialGradient id="g-ball" cx="35%" cy="28%" r="75%">
@@ -300,7 +331,7 @@
           </div>
           <div id="l1Rabbit" class="absolute text-4xl select-none" style="right:8%; bottom:6%; display:none; cursor:grab;" title="달토끼를 흔들어보세요">🐇</div>
         </div>
-        <div class="flex sm:flex-col gap-3 justify-center" id="ingredientRow">
+        <div class="flex flex-row flex-wrap gap-2 justify-center" id="ingredientRow">
           <div class="ingredient-chip glass rounded-2xl p-2 flex flex-col items-center w-16" data-name="쑥" data-key="mugwort">
             <svg width="28" height="28" viewBox="0 0 32 32" aria-hidden="true">
               <path d="M16,4 L20,9 L17,12 L22,16 L18,20 L23,24 L16,29 L9,24 L14,20 L10,16 L15,12 L12,9 Z"
@@ -378,7 +409,7 @@
     <!-- ================= LEVEL 3 ================= -->
     <section class="level-pane p-4 sm:p-6" data-pane="l3" hidden>
       <div class="flex items-center justify-between mb-3">
-        <h2 class="font-bold text-lg flex items-center gap-2"><i data-lucide="layers" class="w-5 h-5" style="color:var(--moon)"></i>차례상 팩트체크 데이터랩</h2>
+        <h2 class="font-bold text-lg flex items-center gap-2"><i data-lucide="layers" class="w-5 h-5" style="color:var(--moon)"></i>추석 사실 확인단</h2>
         <span class="text-sm text-white/60" id="l3Counter">1/1</span>
       </div>
       <div class="flex-1 flip-scene">
@@ -604,6 +635,7 @@ function showLevel(id){
   Object.entries(panes).forEach(([key,el])=>{ el.hidden = key!==id; });
   tabBtns.forEach(b=>b.dataset.active = (b.dataset.level===id) ? "true" : "false");
   document.getElementById("viewport").classList.toggle("viewport--flexible", id==="end" || id==="result");
+  document.getElementById("viewport").classList.toggle("viewport--l1", id==="l1");
   if(id==="l1" && !l1IntroShown){ l1IntroShown = true; showL1Intro(); }
   if(id==="l3" && !l3IntroShown){ l3IntroShown = true; showL3Intro(); }
   if(id==="end") renderEnding();
@@ -964,127 +996,127 @@ function drawBasket(){
     l2Ctx.beginPath(); l2Ctx.moveTo(x+6,ly); l2Ctx.quadraticCurveTo(x+w/2,ly+4,x+w-6,ly); l2Ctx.stroke();
   }
 }
-function drawItem(it){
+function drawItem(ctx, it){
   const {x,y,type} = it;
-  l2Ctx.save(); l2Ctx.translate(x,y);
+  ctx.save(); ctx.translate(x,y);
   if(type==="chestnut"){
-    const g = l2Ctx.createRadialGradient(-4,-6,2, 0,0,16);
+    const g = ctx.createRadialGradient(-4,-6,2, 0,0,16);
     g.addColorStop(0,"#9a6a3c"); g.addColorStop(1,"#5a3418");
-    l2Ctx.fillStyle=g; l2Ctx.beginPath(); l2Ctx.ellipse(0,0,13,15,0,0,Math.PI*2); l2Ctx.fill();
-    l2Ctx.fillStyle="#efe3c8"; l2Ctx.beginPath(); l2Ctx.ellipse(0,-13,6.5,5,0,0,Math.PI*2); l2Ctx.fill();
-    l2Ctx.strokeStyle="rgba(255,255,255,.25)"; l2Ctx.lineWidth=1.5;
-    l2Ctx.beginPath(); l2Ctx.moveTo(-4,-2); l2Ctx.quadraticCurveTo(-2,4,-5,9); l2Ctx.stroke();
+    ctx.fillStyle=g; ctx.beginPath(); ctx.ellipse(0,0,13,15,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle="#efe3c8"; ctx.beginPath(); ctx.ellipse(0,-13,6.5,5,0,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle="rgba(255,255,255,.25)"; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(-4,-2); ctx.quadraticCurveTo(-2,4,-5,9); ctx.stroke();
   } else if(type==="persimmon"){
-    const g = l2Ctx.createRadialGradient(-5,-6,2, 0,0,16);
+    const g = ctx.createRadialGradient(-5,-6,2, 0,0,16);
     g.addColorStop(0,"#ffb15c"); g.addColorStop(1,"#d9650f");
-    l2Ctx.fillStyle=g; l2Ctx.beginPath(); l2Ctx.arc(0,1,14,0,Math.PI*2); l2Ctx.fill();
-    l2Ctx.strokeStyle="rgba(140,60,0,.35)"; l2Ctx.lineWidth=1.2;
-    for(const a of [-1.1,-0.35,0.35,1.1]){ l2Ctx.beginPath(); l2Ctx.moveTo(0,1); l2Ctx.lineTo(Math.sin(a)*13,1-Math.cos(a)*13); l2Ctx.stroke(); }
-    l2Ctx.fillStyle="#4a7a2e"; l2Ctx.beginPath();
-    l2Ctx.moveTo(-7,-13); l2Ctx.lineTo(0,-18); l2Ctx.lineTo(7,-13); l2Ctx.lineTo(0,-10); l2Ctx.closePath(); l2Ctx.fill();
+    ctx.fillStyle=g; ctx.beginPath(); ctx.arc(0,1,14,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle="rgba(140,60,0,.35)"; ctx.lineWidth=1.2;
+    for(const a of [-1.1,-0.35,0.35,1.1]){ ctx.beginPath(); ctx.moveTo(0,1); ctx.lineTo(Math.sin(a)*13,1-Math.cos(a)*13); ctx.stroke(); }
+    ctx.fillStyle="#4a7a2e"; ctx.beginPath();
+    ctx.moveTo(-7,-13); ctx.lineTo(0,-18); ctx.lineTo(7,-13); ctx.lineTo(0,-10); ctx.closePath(); ctx.fill();
   } else if(type==="grain"){
-    l2Ctx.strokeStyle="#c99a3e"; l2Ctx.lineWidth=3; l2Ctx.lineCap="round";
-    l2Ctx.beginPath(); l2Ctx.moveTo(0,15); l2Ctx.quadraticCurveTo(3,0,0,-15); l2Ctx.stroke();
+    ctx.strokeStyle="#c99a3e"; ctx.lineWidth=3; ctx.lineCap="round";
+    ctx.beginPath(); ctx.moveTo(0,15); ctx.quadraticCurveTo(3,0,0,-15); ctx.stroke();
     for(let i=-11;i<=11;i+=5.5){
-      l2Ctx.save(); l2Ctx.translate(2+Math.sin(i)* 1.5, i);
-      const g = l2Ctx.createLinearGradient(-5,0,5,0); g.addColorStop(0,"#fff0b8"); g.addColorStop(1,"#e8b94a");
-      l2Ctx.fillStyle=g; l2Ctx.beginPath(); l2Ctx.ellipse(0,0,5,3,0.6,0,Math.PI*2); l2Ctx.fill();
-      l2Ctx.restore();
+      ctx.save(); ctx.translate(2+Math.sin(i)* 1.5, i);
+      const g = ctx.createLinearGradient(-5,0,5,0); g.addColorStop(0,"#fff0b8"); g.addColorStop(1,"#e8b94a");
+      ctx.fillStyle=g; ctx.beginPath(); ctx.ellipse(0,0,5,3,0.6,0,Math.PI*2); ctx.fill();
+      ctx.restore();
     }
   } else if(type==="mugwort"){
     // jagged multi-lobed 쑥 leaf silhouette (not a smooth almond shape)
-    const g = l2Ctx.createLinearGradient(0,-16,0,16); g.addColorStop(0,"#8fbf5a"); g.addColorStop(1,"#4f7a2e");
-    l2Ctx.fillStyle=g;
-    l2Ctx.beginPath();
-    l2Ctx.moveTo(0,16);
-    l2Ctx.lineTo(6,10); l2Ctx.lineTo(3,6); l2Ctx.lineTo(9,1); l2Ctx.lineTo(5,-4);
-    l2Ctx.lineTo(10,-9); l2Ctx.lineTo(4,-11); l2Ctx.lineTo(0,-17);
-    l2Ctx.lineTo(-4,-11); l2Ctx.lineTo(-10,-9); l2Ctx.lineTo(-5,-4); l2Ctx.lineTo(-9,1);
-    l2Ctx.lineTo(-3,6); l2Ctx.lineTo(-6,10);
-    l2Ctx.closePath(); l2Ctx.fill();
-    l2Ctx.strokeStyle="#365419"; l2Ctx.lineWidth=1; l2Ctx.stroke();
-    l2Ctx.strokeStyle="rgba(255,255,255,.4)"; l2Ctx.lineWidth=1.2;
-    l2Ctx.beginPath(); l2Ctx.moveTo(0,14); l2Ctx.lineTo(0,-15); l2Ctx.stroke();
+    const g = ctx.createLinearGradient(0,-16,0,16); g.addColorStop(0,"#8fbf5a"); g.addColorStop(1,"#4f7a2e");
+    ctx.fillStyle=g;
+    ctx.beginPath();
+    ctx.moveTo(0,16);
+    ctx.lineTo(6,10); ctx.lineTo(3,6); ctx.lineTo(9,1); ctx.lineTo(5,-4);
+    ctx.lineTo(10,-9); ctx.lineTo(4,-11); ctx.lineTo(0,-17);
+    ctx.lineTo(-4,-11); ctx.lineTo(-10,-9); ctx.lineTo(-5,-4); ctx.lineTo(-9,1);
+    ctx.lineTo(-3,6); ctx.lineTo(-6,10);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle="#365419"; ctx.lineWidth=1; ctx.stroke();
+    ctx.strokeStyle="rgba(255,255,255,.4)"; ctx.lineWidth=1.2;
+    ctx.beginPath(); ctx.moveTo(0,14); ctx.lineTo(0,-15); ctx.stroke();
   } else if(type==="pumpkin"){
     // whole harvested 단호박: dark green mottled skin + chunky stem (cut/orange form is used in Level 1's filling)
-    const g = l2Ctx.createRadialGradient(-5,-4,2, 0,2,15);
+    const g = ctx.createRadialGradient(-5,-4,2, 0,2,15);
     g.addColorStop(0,"#5f8f3a"); g.addColorStop(0.6,"#3c6b28"); g.addColorStop(1,"#274a1a");
-    l2Ctx.fillStyle=g; l2Ctx.beginPath(); l2Ctx.ellipse(0,2,14,11,0,0,Math.PI*2); l2Ctx.fill();
-    l2Ctx.strokeStyle="rgba(20,40,10,.45)"; l2Ctx.lineWidth=1.6;
-    for(const dx of [-8,-3,3,8]){ l2Ctx.beginPath(); l2Ctx.ellipse(dx,2,3.2,11,0,0,Math.PI*2); l2Ctx.stroke(); }
-    l2Ctx.fillStyle="rgba(200,225,170,.55)";
+    ctx.fillStyle=g; ctx.beginPath(); ctx.ellipse(0,2,14,11,0,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle="rgba(20,40,10,.45)"; ctx.lineWidth=1.6;
+    for(const dx of [-8,-3,3,8]){ ctx.beginPath(); ctx.ellipse(dx,2,3.2,11,0,0,Math.PI*2); ctx.stroke(); }
+    ctx.fillStyle="rgba(200,225,170,.55)";
     [[-6,-3],[4,5],[-2,7],[7,-2],[1,-6]].forEach(([mx,my])=>{
-      l2Ctx.beginPath(); l2Ctx.ellipse(mx,my,2.2,1.3,0.4,0,Math.PI*2); l2Ctx.fill();
+      ctx.beginPath(); ctx.ellipse(mx,my,2.2,1.3,0.4,0,Math.PI*2); ctx.fill();
     });
-    l2Ctx.fillStyle="#8a6a3c";
-    l2Ctx.beginPath();
-    l2Ctx.moveTo(-3,-9); l2Ctx.lineTo(-2,-16); l2Ctx.lineTo(2,-16); l2Ctx.lineTo(3,-9);
-    l2Ctx.closePath(); l2Ctx.fill();
+    ctx.fillStyle="#8a6a3c";
+    ctx.beginPath();
+    ctx.moveTo(-3,-9); ctx.lineTo(-2,-16); ctx.lineTo(2,-16); ctx.lineTo(3,-9);
+    ctx.closePath(); ctx.fill();
   } else if(type==="redbean"){
     // each bean gets a pale cream hilum line, not just a highlight dot
-    l2Ctx.fillStyle="#7a2f2f";
+    ctx.fillStyle="#7a2f2f";
     const beans = [[-6,-2],[6,2],[0,7],[-3,-9],[5,-6]];
     beans.forEach(([bx,by])=>{
-      l2Ctx.beginPath(); l2Ctx.ellipse(bx,by,4.6,3.4,0.3,0,Math.PI*2); l2Ctx.fill();
+      ctx.beginPath(); ctx.ellipse(bx,by,4.6,3.4,0.3,0,Math.PI*2); ctx.fill();
     });
-    l2Ctx.strokeStyle="#f0e0c8"; l2Ctx.lineWidth=1; l2Ctx.lineCap="round";
+    ctx.strokeStyle="#f0e0c8"; ctx.lineWidth=1; ctx.lineCap="round";
     beans.forEach(([bx,by])=>{
-      l2Ctx.save(); l2Ctx.translate(bx,by); l2Ctx.rotate(0.3);
-      l2Ctx.beginPath(); l2Ctx.moveTo(-3.6,0); l2Ctx.lineTo(3.6,0); l2Ctx.stroke();
-      l2Ctx.restore();
+      ctx.save(); ctx.translate(bx,by); ctx.rotate(0.3);
+      ctx.beginPath(); ctx.moveTo(-3.6,0); ctx.lineTo(3.6,0); ctx.stroke();
+      ctx.restore();
     });
   } else if(type==="sesame"){
     // uniformly light tan/beige toasted seeds, no black
     for(let i=0;i<10;i++){
       const sx=(Math.sin(i*2.3)*11), sy=(Math.cos(i*1.7)*9);
-      l2Ctx.fillStyle = i%2===0 ? "#e8d5a3" : "#f2e3b8";
-      l2Ctx.beginPath(); l2Ctx.ellipse(sx,sy,2,1.1,i,0,Math.PI*2); l2Ctx.fill();
+      ctx.fillStyle = i%2===0 ? "#e8d5a3" : "#f2e3b8";
+      ctx.beginPath(); ctx.ellipse(sx,sy,2,1.1,i,0,Math.PI*2); ctx.fill();
     }
   } else if(type==="rock"){
-    const g = l2Ctx.createLinearGradient(-12,-12,13,12); g.addColorStop(0,"#9a9a9a"); g.addColorStop(1,"#5f5f5f");
-    l2Ctx.fillStyle=g; l2Ctx.beginPath();
-    l2Ctx.moveTo(-12,6); l2Ctx.lineTo(-6,-10); l2Ctx.lineTo(8,-12); l2Ctx.lineTo(13,4); l2Ctx.lineTo(2,12); l2Ctx.closePath(); l2Ctx.fill();
-    l2Ctx.strokeStyle="rgba(0,0,0,.25)"; l2Ctx.lineWidth=1;
-    l2Ctx.beginPath(); l2Ctx.moveTo(-4,-6); l2Ctx.lineTo(2,2); l2Ctx.stroke();
+    const g = ctx.createLinearGradient(-12,-12,13,12); g.addColorStop(0,"#9a9a9a"); g.addColorStop(1,"#5f5f5f");
+    ctx.fillStyle=g; ctx.beginPath();
+    ctx.moveTo(-12,6); ctx.lineTo(-6,-10); ctx.lineTo(8,-12); ctx.lineTo(13,4); ctx.lineTo(2,12); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle="rgba(0,0,0,.25)"; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(-4,-6); ctx.lineTo(2,2); ctx.stroke();
   } else if(type==="bug"){
-    l2Ctx.fillStyle="#6b2c91"; l2Ctx.beginPath(); l2Ctx.ellipse(0,0,10,7,0,0,Math.PI*2); l2Ctx.fill();
-    l2Ctx.fillStyle="#8a4bb8";
-    l2Ctx.beginPath(); l2Ctx.ellipse(-3,0,3,2.4,0,0,Math.PI*2); l2Ctx.fill();
-    l2Ctx.strokeStyle="#6b2c91"; l2Ctx.lineWidth=2;
-    l2Ctx.beginPath(); l2Ctx.moveTo(-8,-4); l2Ctx.lineTo(-14,-9); l2Ctx.moveTo(8,-4); l2Ctx.lineTo(14,-9); l2Ctx.stroke();
+    ctx.fillStyle="#6b2c91"; ctx.beginPath(); ctx.ellipse(0,0,10,7,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle="#8a4bb8";
+    ctx.beginPath(); ctx.ellipse(-3,0,3,2.4,0,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle="#6b2c91"; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(-8,-4); ctx.lineTo(-14,-9); ctx.moveTo(8,-4); ctx.lineTo(14,-9); ctx.stroke();
   } else if(type==="wasp"){
-    l2Ctx.fillStyle="rgba(255,255,255,.5)";
-    l2Ctx.beginPath(); l2Ctx.ellipse(-3,-9,7,4,0.5,0,Math.PI*2); l2Ctx.fill();
-    l2Ctx.beginPath(); l2Ctx.ellipse(5,-8,7,4,-0.3,0,Math.PI*2); l2Ctx.fill();
-    l2Ctx.beginPath(); l2Ctx.ellipse(0,0,9,6,0,0,Math.PI*2);
-    const stripes = l2Ctx.createLinearGradient(-9,0,9,0);
+    ctx.fillStyle="rgba(255,255,255,.5)";
+    ctx.beginPath(); ctx.ellipse(-3,-9,7,4,0.5,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(5,-8,7,4,-0.3,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(0,0,9,6,0,0,Math.PI*2);
+    const stripes = ctx.createLinearGradient(-9,0,9,0);
     stripes.addColorStop(0,"#1a1a1a"); stripes.addColorStop(0.25,"#f4c430"); stripes.addColorStop(0.5,"#1a1a1a"); stripes.addColorStop(0.75,"#f4c430"); stripes.addColorStop(1,"#1a1a1a");
-    l2Ctx.fillStyle = stripes; l2Ctx.fill();
-    l2Ctx.fillStyle="#1a1a1a"; l2Ctx.beginPath(); l2Ctx.moveTo(8,2); l2Ctx.lineTo(14,0); l2Ctx.lineTo(8,-2); l2Ctx.closePath(); l2Ctx.fill();
+    ctx.fillStyle = stripes; ctx.fill();
+    ctx.fillStyle="#1a1a1a"; ctx.beginPath(); ctx.moveTo(8,2); ctx.lineTo(14,0); ctx.lineTo(8,-2); ctx.closePath(); ctx.fill();
   } else if(type==="timeFairy"){
-    const halo = l2Ctx.createRadialGradient(0,0,4,0,0,24);
+    const halo = ctx.createRadialGradient(0,0,4,0,0,24);
     halo.addColorStop(0,"rgba(255,235,180,.9)"); halo.addColorStop(1,"rgba(255,235,180,0)");
-    l2Ctx.fillStyle=halo; l2Ctx.beginPath(); l2Ctx.arc(0,0,24,0,Math.PI*2); l2Ctx.fill();
-    l2Ctx.fillStyle="#f4ecff";
-    l2Ctx.beginPath(); l2Ctx.ellipse(-5,-13,3.5,9,-0.15,0,Math.PI*2); l2Ctx.fill();
-    l2Ctx.beginPath(); l2Ctx.ellipse(5,-13,3.5,9,0.15,0,Math.PI*2); l2Ctx.fill();
-    l2Ctx.beginPath(); l2Ctx.ellipse(0,3,11,9,0,0,Math.PI*2); l2Ctx.fill();
-    l2Ctx.fillStyle="#ffb6d9";
-    l2Ctx.beginPath(); l2Ctx.ellipse(-4,-11,1.6,4,-0.15,0,Math.PI*2); l2Ctx.fill();
-    l2Ctx.beginPath(); l2Ctx.ellipse(4,-11,1.6,4,0.15,0,Math.PI*2); l2Ctx.fill();
-    l2Ctx.fillStyle="#3a2c40";
-    l2Ctx.beginPath(); l2Ctx.arc(-4,1,1.2,0,Math.PI*2); l2Ctx.fill();
-    l2Ctx.beginPath(); l2Ctx.arc(4,1,1.2,0,Math.PI*2); l2Ctx.fill();
-    l2Ctx.fillStyle="#ffd54f";
+    ctx.fillStyle=halo; ctx.beginPath(); ctx.arc(0,0,24,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle="#f4ecff";
+    ctx.beginPath(); ctx.ellipse(-5,-13,3.5,9,-0.15,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(5,-13,3.5,9,0.15,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(0,3,11,9,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle="#ffb6d9";
+    ctx.beginPath(); ctx.ellipse(-4,-11,1.6,4,-0.15,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(4,-11,1.6,4,0.15,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle="#3a2c40";
+    ctx.beginPath(); ctx.arc(-4,1,1.2,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(4,1,1.2,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle="#ffd54f";
     [[-16,-14],[15,-6],[10,12]].forEach(([sx,sy])=>{
-      l2Ctx.save(); l2Ctx.translate(sx,sy);
-      l2Ctx.beginPath();
-      for(let k=0;k<4;k++){ l2Ctx.lineTo(Math.cos(k*Math.PI/2)*4, Math.sin(k*Math.PI/2)*4); l2Ctx.lineTo(Math.cos(k*Math.PI/2+Math.PI/4)*1.5, Math.sin(k*Math.PI/2+Math.PI/4)*1.5); }
-      l2Ctx.closePath(); l2Ctx.fill();
-      l2Ctx.restore();
+      ctx.save(); ctx.translate(sx,sy);
+      ctx.beginPath();
+      for(let k=0;k<4;k++){ ctx.lineTo(Math.cos(k*Math.PI/2)*4, Math.sin(k*Math.PI/2)*4); ctx.lineTo(Math.cos(k*Math.PI/2+Math.PI/4)*1.5, Math.sin(k*Math.PI/2+Math.PI/4)*1.5); }
+      ctx.closePath(); ctx.fill();
+      ctx.restore();
     });
   }
-  l2Ctx.restore();
+  ctx.restore();
 }
 const GOOD_TYPES = ["chestnut","persimmon","grain","mugwort","pumpkin","redbean","sesame"];
 const BAD_TYPES = ["rock","bug","wasp"];
@@ -1111,7 +1143,7 @@ function l2Loop(ts){
   const basketY = l2Canvas.height-18-6, basketHalf = 39;
   l2.items = l2.items.filter(it=>{
     it.y += it.speed*dt;
-    drawItem(it);
+    drawItem(l2Ctx, it);
     const bx = l2.basketX*l2Canvas.width;
     if(it.y > basketY-10 && it.y < basketY+16 && Math.abs(it.x-bx) < basketHalf){
       if(it.kind==="bonus"){
@@ -1227,8 +1259,67 @@ function showL2Intro(){
   safeIcons();
   box.querySelector("[data-start]").addEventListener("click", ()=>{
     closeActivePopup();
-    l2Start();
+    showL2Guide();
   });
+  overlay.addEventListener("click", (e)=>{ if(e.target===overlay) closeActivePopup(); });
+}
+const L2_LEGEND_LABEL = {
+  chestnut:"밤", persimmon:"감", grain:"햇곡식", mugwort:"쑥", pumpkin:"단호박", redbean:"팥", sesame:"깨",
+  rock:"돌멩이", bug:"벌레", wasp:"말벌", timeFairy:"토끼 요정"
+};
+function l2LegendIconCanvas(type){
+  const c = document.createElement("canvas");
+  c.width = 52; c.height = 52;
+  c.className = "rounded-lg bg-black/20";
+  drawItem(c.getContext("2d"), {x:26, y:26, type});
+  return c;
+}
+function l2LegendGroup(title, types){
+  const wrap = document.createElement("div");
+  wrap.className = "mb-3";
+  const heading = document.createElement("p");
+  heading.className = "text-xs font-bold text-white/70 mb-1.5";
+  heading.textContent = title;
+  wrap.appendChild(heading);
+  const grid = document.createElement("div");
+  grid.className = "grid grid-cols-4 gap-2";
+  types.forEach(type=>{
+    const cell = document.createElement("div");
+    cell.className = "flex flex-col items-center gap-1";
+    cell.appendChild(l2LegendIconCanvas(type));
+    const label = document.createElement("span");
+    label.className = "text-[10px] text-white/70 text-center leading-tight";
+    label.textContent = L2_LEGEND_LABEL[type];
+    cell.appendChild(label);
+    grid.appendChild(cell);
+  });
+  wrap.appendChild(grid);
+  return wrap;
+}
+function showL2Guide(){
+  closeActivePopup();
+  const overlay = document.createElement("div");
+  overlay.className = "absolute inset-0 z-30 flex items-center justify-center p-4";
+  overlay.style.background = "rgba(10,12,30,0.55)";
+  const box = document.createElement("div");
+  box.className = "glass-card rounded-2xl p-5 max-w-sm w-full max-h-[85%] overflow-y-auto";
+  const heading = document.createElement("h3");
+  heading.className = "font-bold mb-3 flex items-center gap-2";
+  heading.innerHTML = `<i data-lucide="info" class="w-4 h-4"></i>무엇을 모아야 할까요?`;
+  box.appendChild(heading);
+  box.appendChild(l2LegendGroup("✅ 주워야 해요 (점수 +)", GOOD_TYPES));
+  box.appendChild(l2LegendGroup("⭐ 만나면 좋아요 (시간 +5초)", ["timeFairy"]));
+  box.appendChild(l2LegendGroup("🚫 피해야 해요 (점수 -)", BAD_TYPES));
+  const startBtn = document.createElement("button");
+  startBtn.className = "btn btn-primary w-full mt-1";
+  startBtn.setAttribute("data-start","");
+  startBtn.innerHTML = `<i data-lucide="play" class="w-4 h-4"></i>수확 시작!`;
+  box.appendChild(startBtn);
+  overlay.appendChild(box);
+  document.getElementById("viewport").appendChild(overlay);
+  activePopup = overlay;
+  safeIcons();
+  startBtn.addEventListener("click", ()=>{ closeActivePopup(); l2Start(); });
   overlay.addEventListener("click", (e)=>{ if(e.target===overlay) closeActivePopup(); });
 }
 l2StartBtn.addEventListener("click", showL2Intro);
@@ -1340,8 +1431,21 @@ const bonusScoreEl = document.getElementById("bonusScore");
 const bonusHeartsEl = document.getElementById("bonusHearts");
 const bonusStartBtn = document.getElementById("bonusStartBtn");
 
-let bonus = { running:false, words:[], score:0, life:3, lastSpawn:0, elapsed:0 };
+let bonus = { running:false, words:[], score:0, life:3, lastSpawn:0, elapsed:0, hardModeShown:false };
 let bonusRaf = null, bonusLastTs = 0;
+const BONUS_HARDMODE_AT = 20;
+
+function showHardModeToast(){
+  const toast = document.createElement("div");
+  toast.className = "hardmode-toast";
+  toast.textContent = "이제부터는 색으로 구분할 수 없어요! 잘 읽어보세요";
+  bonusField.appendChild(toast);
+  requestAnimationFrame(()=> toast.classList.add("show"));
+  setTimeout(()=>{
+    toast.classList.remove("show");
+    setTimeout(()=> toast.remove(), 350);
+  }, 2000);
+}
 
 function renderHearts(){
   bonusHeartsEl.innerHTML = "";
@@ -1359,8 +1463,10 @@ function bonusSpawnWord(){
   const isTrap = Math.random() < 0.32;
   const pool = isTrap ? BONUS_TRAP_WORDS : BONUS_GOOD_WORDS;
   const word = pool[Math.floor(Math.random()*pool.length)];
+  const hardMode = bonus.elapsed >= BONUS_HARDMODE_AT;
+  if(hardMode && !bonus.hardModeShown){ bonus.hardModeShown = true; showHardModeToast(); }
   const el = document.createElement("div");
-  el.className = "word-chip " + (isTrap ? "trap" : "good");
+  el.className = "word-chip " + ((isTrap && !hardMode) ? "trap" : "good");
   el.textContent = word;
   const xPct = 8 + Math.random()*84;
   el.style.left = xPct + "%";
@@ -1386,7 +1492,7 @@ function bonusLoop(ts){
 
 function bonusStart(){
   bonus.words.forEach(w=>w.el.remove());
-  bonus = { running:true, words:[], score:0, life:3, lastSpawn:0, elapsed:0 };
+  bonus = { running:true, words:[], score:0, life:3, lastSpawn:0, elapsed:0, hardModeShown:false };
   bonusScoreEl.textContent = "0";
   updateTotalScore();
   renderHearts();
