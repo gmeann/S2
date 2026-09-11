@@ -68,6 +68,7 @@
   }
   .level-pane{ position:absolute; inset:0; display:flex; flex-direction:column; }
   .level-pane[hidden]{ display:none !important; }
+  #l3CompletedView[hidden]{ display:none !important; }
 
   /* ---------- Level 1: dough (songpyeon stages, SVG layers) ---------- */
   .dough{
@@ -412,7 +413,7 @@
         <h2 class="font-bold text-lg flex items-center gap-2"><i data-lucide="layers" class="w-5 h-5" style="color:var(--moon)"></i>추석 사실 확인단</h2>
         <span class="text-sm text-white/60" id="l3Counter">1/1</span>
       </div>
-      <div class="flex-1 flip-scene">
+      <div class="flex-1 flip-scene" id="l3FlipScene">
         <div class="flip-card" id="l3Card">
           <div class="flip-face card-elegant" id="l3Front">
             <svg class="lattice-corner lattice-tl" viewBox="0 0 46 46" fill="none" stroke="#3a2c1d" stroke-width="1" aria-hidden="true">
@@ -464,6 +465,12 @@
           </div>
         </div>
       </div>
+      <div class="flex-1 flex flex-col items-center justify-center gap-3 text-center" id="l3CompletedView" hidden>
+        <div class="text-4xl">🎉</div>
+        <p class="font-bold text-lg" id="l3CompletedSummary">10/10 완료 · 정답 0개</p>
+        <p class="text-xs text-white/60 max-w-xs">추석에 대한 오해와 진실을 모두 살펴봤어요! 덕분에 도움이 많이 됐어요.</p>
+        <button class="btn btn-jade mt-2" id="l3RetryBtn"><i data-lucide="rotate-ccw" class="w-4 h-4"></i>다시 풀어보기</button>
+      </div>
     </section>
 
     <!-- ================= BONUS ================= -->
@@ -488,7 +495,7 @@
       <h2 class="font-bold text-xl mb-1 flex items-center gap-2"><i data-lucide="home" class="w-5 h-5" style="color:var(--moon)"></i>우리 집 추석</h2>
       <p class="text-sm text-white/70 mb-4">추석에 하는 일은 집집마다 달라요. 여러분의 이야기를 자유롭게 적어보세요. (저장되지 않고 이 화면에만 표시돼요)</p>
       <label class="block text-sm font-semibold mb-1">우리 집에서는 추석에 이런 일을 해요</label>
-      <textarea id="endText" rows="3" class="w-full rounded-xl px-3 py-2 text-black mb-4" placeholder="예: 가족과 모여서 송편을 빚어요 / 성묘를 다녀와요 / 평소처럼 지내요 등등 무엇이든 좋아요"></textarea>
+      <textarea id="endText" rows="4" class="w-full rounded-xl px-3 py-2 text-black mb-4 resize-none shrink-0" placeholder="예: 가족과 모여서 송편을 빚어요 / 성묘를 다녀와요 / 평소처럼 지내요 등등 무엇이든 좋아요"></textarea>
       <button class="btn btn-jade mb-6" id="endShowBtn"><i data-lucide="sparkles" class="w-4 h-4"></i>내 이야기 보기</button>
       <div id="endReflection" class="glass-card rounded-2xl p-4 mb-6" hidden>
         <p class="text-sm" id="endReflectionText"></p>
@@ -524,6 +531,7 @@
   </div>
 
   <footer class="text-center text-[11px] text-white/40 mt-4">추석 계기교육용 웹게임 · 오답을 걱정하지 말고 마음껏 눌러보세요</footer>
+  <p class="text-center text-[10px] mt-1" style="color:#217be8">AI미래교육연구회</p>
 </div>
 
 <script>
@@ -641,12 +649,50 @@ function showLevel(id){
   if(id==="end") renderEnding();
   if(id==="result") renderResultCard();
 }
-tabBtns.forEach(b=> b.addEventListener("click", ()=> showLevel(b.dataset.level)) );
+function attemptShowLevel(id){
+  const current = tabBtns.find(b=>b.dataset.active==="true");
+  if(current && current.dataset.level===id){ showLevel(id); return; }
+  if(!panes.l2.hidden && l2.running){
+    showLeaveConfirm(()=>{ abortL2(); showLevel(id); });
+    return;
+  }
+  if(!panes.bonus.hidden && bonus.running){
+    showLeaveConfirm(()=>{ abortBonus(); showLevel(id); });
+    return;
+  }
+  showLevel(id);
+}
+tabBtns.forEach(b=> b.addEventListener("click", ()=> attemptShowLevel(b.dataset.level)) );
 
 /* ============ Fact popup (shared) ============ */
 let activePopup = null;
 function closeActivePopup(){
   if(activePopup){ activePopup.remove(); activePopup = null; }
+}
+function showLeaveConfirm(onConfirm){
+  closeActivePopup();
+  const overlay = document.createElement("div");
+  overlay.className = "absolute inset-0 z-30 flex items-center justify-center p-4";
+  overlay.style.background = "rgba(10,12,30,0.55)";
+  const box = document.createElement("div");
+  box.className = "glass-card rounded-2xl p-5 max-w-sm w-full";
+  box.innerHTML = `
+    <h3 class="font-bold mb-3 flex items-center gap-2">⚠️ 잠깐! 아직 진행 중이에요</h3>
+    <p class="text-sm leading-relaxed mb-4">지금 나가면 이번 판 기록은 사라져요. 그래도 나가시겠어요?</p>
+    <div class="flex gap-2">
+      <button class="btn btn-ghost flex-1" data-stay>계속 플레이</button>
+      <button class="btn btn-jade flex-1" data-leave>그래도 나가기</button>
+    </div>`;
+  overlay.appendChild(box);
+  document.getElementById("viewport").appendChild(overlay);
+  activePopup = overlay;
+  safeIcons();
+  box.querySelector("[data-stay]").addEventListener("click", closeActivePopup);
+  box.querySelector("[data-leave]").addEventListener("click", ()=>{
+    closeActivePopup();
+    onConfirm();
+  });
+  overlay.addEventListener("click", (e)=>{ if(e.target===overlay) closeActivePopup(); });
 }
 
 let endingShown = false;
@@ -1219,6 +1265,13 @@ function l2End(){
     });
   });
 }
+function abortL2(){
+  l2.running = false;
+  clearInterval(l2TimerId); cancelAnimationFrame(l2RafId);
+  l2StartBtn.style.display = "";
+  l2StartBtn.innerHTML = '<i data-lucide="rotate-ccw" class="w-4 h-4"></i>다시 수확하기';
+  safeIcons();
+}
 function showL1Intro(){
   closeActivePopup();
   const overlay = document.createElement("div");
@@ -1347,9 +1400,15 @@ const l3Counter = document.getElementById("l3Counter");
 const l3ResultTag = document.getElementById("l3ResultTag");
 const l3Explain = document.getElementById("l3Explain");
 const l3Source = document.getElementById("l3Source");
+const l3FlipScene = document.getElementById("l3FlipScene");
+const l3CompletedView = document.getElementById("l3CompletedView");
+const l3CompletedSummary = document.getElementById("l3CompletedSummary");
+const l3RetryBtn = document.getElementById("l3RetryBtn");
 let l3Index = 0;
 let l3IntroShown = false;
 let l3AllSeenShown = false;
+let l3Completed = false;
+let l3CorrectCount = 0;
 let l3Seen = new Set();
 
 function renderL3Card(){
@@ -1369,10 +1428,13 @@ function judgeL3(pick){
   l3Source.href = card.url;
   l3Source.textContent = "출처: " + hostname(card.url);
   l3CardEl.classList.add("flipped");
+  const firstView = !l3Seen.has(l3Index);
   l3Seen.add(l3Index);
+  if(firstView && isRight) l3CorrectCount++;
   updateTotalScore();
   if(!l3AllSeenShown && l3Seen.size >= FACT_CARDS.length){
     l3AllSeenShown = true;
+    l3Completed = true;
     showL3Complete();
   }
 }
@@ -1408,8 +1470,8 @@ function showL3Complete(){
   const box = document.createElement("div");
   box.className = "glass-card rounded-2xl p-5 max-w-sm w-full max-h-[80%] overflow-y-auto";
   box.innerHTML = `
-    <h3 class="font-bold mb-3 flex items-center gap-2">🐇 토끼 요정의 인사</h3>
-    <p class="text-sm leading-relaxed mb-4">덕분에 오해를 다 풀었어요! 고마워요 🌕</p>
+    <h3 class="font-bold mb-3 flex items-center gap-2">🎉 추석 사실 확인 완료!</h3>
+    <p class="text-sm leading-relaxed mb-4">${FACT_CARDS.length}장의 카드를 모두 살펴봤어요! 그중 정답을 ${l3CorrectCount}개 맞혔어요.<br><br>덕분에 오해를 다 풀었어요! 고마워요 🌕</p>
     <button class="btn btn-jade w-full" data-close>확인</button>`;
   overlay.appendChild(box);
   document.getElementById("viewport").appendChild(overlay);
@@ -1417,10 +1479,28 @@ function showL3Complete(){
   safeIcons();
   box.querySelector("[data-close]").addEventListener("click", ()=>{
     closeActivePopup();
+    renderL3CompletedState();
     checkAllComplete();
   });
   overlay.addEventListener("click", (e)=>{ if(e.target===overlay) closeActivePopup(); });
 }
+function renderL3CompletedState(){
+  l3FlipScene.hidden = true;
+  l3CompletedView.hidden = false;
+  l3CompletedSummary.textContent = `${FACT_CARDS.length}/${FACT_CARDS.length} 완료 · 정답 ${l3CorrectCount}개`;
+}
+function resetL3(){
+  l3Index = 0;
+  l3Seen = new Set();
+  l3AllSeenShown = false;
+  l3Completed = false;
+  l3CorrectCount = 0;
+  updateTotalScore();
+  l3CompletedView.hidden = true;
+  l3FlipScene.hidden = false;
+  renderL3Card();
+}
+l3RetryBtn.addEventListener("click", resetL3);
 // Render immediately at load so the counter is never 0/0.
 renderL3Card();
 
@@ -1520,6 +1600,14 @@ function bonusEnd(reason){
     });
   });
 }
+function abortBonus(){
+  bonus.running = false;
+  cancelAnimationFrame(bonusRaf);
+  bonus.words.forEach(w=>w.el.remove());
+  bonusStartBtn.style.display = "";
+  bonusStartBtn.innerHTML = '<i data-lucide="rotate-ccw" class="w-4 h-4"></i>다시 도전하기';
+  safeIcons();
+}
 bonusStartBtn.addEventListener("click", bonusStart);
 
 bonusInput.addEventListener("input", ()=>{
@@ -1548,6 +1636,11 @@ bonusInput.addEventListener("input", ()=>{
 bonusInput.addEventListener("keydown", (e)=>{ if(e.key==="Enter"){ bonusInput.value=""; } });
 
 /* ================= ENDING ================= */
+const endTextEl = document.getElementById("endText");
+endTextEl.addEventListener("input", ()=>{
+  endTextEl.style.height = "auto";
+  endTextEl.style.height = Math.min(endTextEl.scrollHeight, 260) + "px";
+});
 document.getElementById("endShowBtn").addEventListener("click", ()=>{
   const box = document.getElementById("endReflection");
   const txt = document.getElementById("endText").value.trim();
