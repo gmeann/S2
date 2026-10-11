@@ -6,7 +6,7 @@
 <title>칠판 글씨 애니메이터</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&family=Gaegu:wght@400;700&family=Hi+Melody&family=Gamja+Flower&family=Poor+Story&family=Yeon+Sung&family=East+Sea+Dokdo&family=Single+Day&family=Nanum+Brush+Script&family=Dokdo&family=Jua&family=Do+Hyeon&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&family=Gaegu:wght@400;700&family=Hi+Melody&family=Gamja+Flower&family=Poor+Story&family=Yeon+Sung&family=East+Sea+Dokdo&family=Single+Day&family=Nanum+Brush+Script&family=Dokdo&family=Jua&family=Do+Hyeon&family=Nanum+Myeongjo:wght@400;700&family=Gowun+Batang:wght@400;700&family=Noto+Serif+KR:wght@400;600&family=Song+Myung&family=Hahmlet:wght@400;600&family=Nanum+Gothic:wght@400;700&family=Gowun+Dodum&family=Noto+Sans+KR:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#1b1a17;
@@ -353,6 +353,7 @@
     <div class="field">
       <label for="font">글꼴</label>
       <select id="font">
+        <optgroup label="손글씨">
         <option value="'Nanum Pen Script'">나눔손글씨 펜</option>
         <option value="'Gaegu'">개구</option>
         <option value="'Hi Melody'">하이멜로디</option>
@@ -365,6 +366,20 @@
         <option value="'Nanum Brush Script'">나눔손글씨 붓</option>
         <option value="'Jua'">주아</option>
         <option value="'Do Hyeon'">도현</option>
+        </optgroup>
+        <optgroup label="진지한 글씨 · 명조(바탕)">
+        <option value="'Nanum Myeongjo'">나눔명조</option>
+        <option value="'Gowun Batang'">고운바탕</option>
+        <option value="'Noto Serif KR'">본명조 (Noto Serif KR)</option>
+        <option value="'Song Myung'">송명</option>
+        <option value="'Hahmlet'">함렛</option>
+        </optgroup>
+        <optgroup label="진지한 글씨 · 고딕(돋움)">
+        <option value="'Nanum Gothic'">나눔고딕</option>
+        <option value="'Gowun Dodum'">고운돋움</option>
+        <option value="'Noto Sans KR'">본고딕 (Noto Sans KR)</option>
+        <option value="'IBM Plex Sans KR'">IBM Plex Sans KR</option>
+        </optgroup>
       </select>
       <div class="font-preview" id="fontPreview">가나다 ABC 123</div>
     </div>
@@ -772,17 +787,29 @@
   }
 
   function makeRenderer(L, scale){
-    const W = Math.round(L.w * scale / 2) * 2, H = Math.round(L.h * scale / 2) * 2;
-    const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+    const W = Math.round(L.w * scale), H = Math.round(L.h * scale);
+    // wooden frame around the board, same proportions as the on-screen frame
+    const PX = Math.round(18 * scale), PT = Math.round(18 * scale);
+    const FW = Math.round((W + PX * 2) / 2) * 2, FH = Math.round((H + PT + 34 * scale) / 2) * 2;
+    const cv = document.createElement('canvas'); cv.width = FW; cv.height = FH;
     const ctx = cv.getContext('2d');
     const layer = document.createElement('canvas'); layer.width = W; layer.height = H;
     const lx = layer.getContext('2d');
 
-    // board background, drawn once
-    const bg = document.createElement('canvas'); bg.width = W; bg.height = H;
+    // frame + board background, drawn once
+    const bg = document.createElement('canvas'); bg.width = FW; bg.height = FH;
     const bx = bg.getContext('2d');
+    let g = bx.createLinearGradient(0, 0, 0, FH);
+    g.addColorStop(0, '#7a4e2a'); g.addColorStop(1, '#5b3519');
+    bx.fillStyle = g; bx.fillRect(0, 0, FW, FH);
+    bx.fillStyle = 'rgba(255,255,255,.04)';
+    for (let x = 0; x < FW; x += 9 * scale) bx.fillRect(x, 0, 2 * scale, FH);   // wood grain
+    bx.fillStyle = 'rgba(255,255,255,.12)'; bx.fillRect(0, 0, FW, 2 * scale);
+    bx.fillStyle = 'rgba(0,0,0,.3)'; bx.fillRect(0, FH - 3 * scale, FW, 3 * scale);
+
+    bx.save(); bx.translate(PX, PT);
     const [b1, b2] = BOARDS[state.board];
-    let g = bx.createLinearGradient(0, 0, W * .34, H);
+    g = bx.createLinearGradient(0, 0, W * .34, H);
     g.addColorStop(0, b1); g.addColorStop(1, b2);
     bx.fillStyle = g; bx.fillRect(0, 0, W, H);
     g = bx.createRadialGradient(W*.3, H*.2, 0, W*.3, H*.2, Math.max(W, H)*.55);
@@ -793,6 +820,23 @@
     bx.fillStyle = g; bx.fillRect(0, 0, W, H);
     bx.globalAlpha = .05; bx.fillStyle = bx.createPattern(makeNoise(256, .5, 11), 'repeat'); bx.fillRect(0, 0, W, H);
     bx.globalAlpha = 1;
+    bx.strokeStyle = 'rgba(0,0,0,.6)'; bx.lineWidth = 2 * scale; bx.strokeRect(0, 0, W, H);
+    bx.restore();
+
+    // chalk tray with sticks and an eraser
+    const tx = FW * .06, tw = FW * .88, th = 14 * scale, ty = FH - 8 * scale - th;
+    bx.save();
+    bx.shadowColor = 'rgba(0,0,0,.4)'; bx.shadowBlur = 6 * scale; bx.shadowOffsetY = 3 * scale;
+    g = bx.createLinearGradient(0, ty, 0, ty + th); g.addColorStop(0, '#8a5a32'); g.addColorStop(1, '#4a2a12');
+    bx.fillStyle = g; bx.fillRect(tx, ty, tw, th);
+    bx.shadowBlur = 2 * scale; bx.shadowOffsetY = 1 * scale;
+    [[20, 48, '#f4f0e6'], [80, 30, '#f0bfcc'], [122, 38, '#f0e08a']].forEach(([l, w, c]) => {
+      bx.fillStyle = c; bx.fillRect(tx + l * scale, ty - 1 * scale, w * scale, 8 * scale);
+    });
+    const ew = 74 * scale, ex = tx + tw * .88 - ew;
+    bx.fillStyle = '#c9a46a'; bx.fillRect(ex, ty - 6 * scale, ew, 10 * scale);
+    bx.fillStyle = '#3b3b3b'; bx.fillRect(ex, ty + 4 * scale, ew, 8 * scale);
+    bx.restore();
 
     const holes = lx.createPattern(makeNoise(192, .2, 7), 'repeat');
     const font = `${state.size * scale}px ${state.font}, cursive`;
@@ -846,10 +890,11 @@
       ctx.save();
       ctx.shadowColor = state.color; ctx.shadowBlur = 5 * scale;
       ctx.globalAlpha = .95;
-      ctx.drawImage(layer, 0, 0);
+      ctx.drawImage(layer, PX, PT);
       ctx.restore();
 
       if (cur && state.hand){
+        ctx.save(); ctx.beginPath(); ctx.rect(PX, PT, W, H); ctx.clip(); ctx.translate(PX, PT);
         const k = clamp((t - cur.start) / L.dur);
         const hx = (cur.x + cur.w * (fx === 'write' || fx === 'flip' ? k : 1)) * scale - 4*scale;
         const hy = (cur.y + cur.h * .55) * scale;
@@ -859,6 +904,7 @@
         ctx.fillStyle = '#ebe6da'; ctx.fillRect(0, -6*scale, 56*scale, 12*scale);
         ctx.shadowColor = 'transparent';
         ctx.fillStyle = state.color; ctx.beginPath(); ctx.ellipse(0, 0, 3*scale, 5*scale, 0, 0, Math.PI*2); ctx.fill();
+        ctx.restore();
         ctx.restore();
       }
     }
