@@ -73,6 +73,6 @@ src/
   scenes/      장면 조립 (Playground = 운동장)
   hooks/       클릭 이동 + 충돌 처리 (useClickToMove)
   data/        이름표 목록, 운동장 배치·충돌 영역
-public/
-  chuseok/     예전에 레포 루트에 있던 추석 웹게임 (배포 시 /chuseok/ 로 함께 올라감)
+archive/
+  chuseok/     예전에 레포 루트에 있던 추석 웹게임 (보관용, 배포에는 포함되지 않음)
 ```
