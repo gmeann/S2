@@ -52,22 +52,26 @@ npm run preview
 
 ## 배포 (GitHub Pages)
 
-`main` 또는 작업 브랜치(`claude/upbeat-ride-tpmm9s`)에 `toegeungil-school/` 변경을 푸시하면, 레포 루트의 `.github/workflows/deploy.yml` 이 이 폴더만 빌드해서 GitHub Pages에 올립니다. Actions 탭에서 **Run workflow** 로 직접 실행할 수도 있어요.
+`main` 또는 작업 브랜치(`claude/upbeat-ride-tpmm9s`)에 `toegeungil-school/` 나 `hangawi/` 변경을 푸시하면, 레포 루트의 `.github/workflows/deploy.yml` 이 이 앱을 빌드하고 한가위 게임과 합쳐서 GitHub Pages에 올립니다.
+
+- 한가위 게임: `https://<사용자명>.github.io/<레포이름>/`
+- 퇴근길 학교: `https://<사용자명>.github.io/<레포이름>/toegeungil-school/`
+ Actions 탭에서 **Run workflow** 로 직접 실행할 수도 있어요.
 
 처음 한 번만 설정이 필요해요.
 
 1. GitHub 레포 → **Settings → Pages**
 2. **Build and deployment → Source** 를 **GitHub Actions** 로 선택
 3. **Settings → Environments → github-pages → Deployment branches** 에 작업 브랜치(`claude/upbeat-ride-tpmm9s`)가 허용돼 있어야 해요. (기본값은 기본 브랜치만 허용)
-4. 푸시하면 Actions 탭에서 진행 상황을 볼 수 있고, 끝나면 `https://<사용자명>.github.io/<레포이름>/` 에서 열립니다.
+4. 푸시하면 Actions 탭에서 진행 상황을 볼 수 있어요.
 
 ### 레포 이름(base 경로) 바꾸기
 
-- 워크플로는 레포 이름을 자동으로 읽어서 `BASE_PATH=/<레포이름>/` 로 빌드해요. 레포 이름을 바꿔도 따로 고칠 것이 없어요.
-- 직접 빌드할 때는 `vite.config.ts` 의 `REPO_NAME` 상수를 고치거나, 환경변수로 덮어쓰면 됩니다.
+- 워크플로는 레포 이름을 자동으로 읽어서 `BASE_PATH=/<레포이름>/toegeungil-school/` 로 빌드해요. 레포 이름을 바꿔도 따로 고칠 것이 없어요.
+- 직접 빌드할 때는 `vite.config.ts` 의 `REPO_NAME`, `APP_DIR` 상수를 고치거나, 환경변수로 덮어쓰면 됩니다.
 
 ```bash
-BASE_PATH=/my-repo/ npm run build
+BASE_PATH=/my-repo/toegeungil-school/ npm run build
 ```
 
 ## 폴더 구조
